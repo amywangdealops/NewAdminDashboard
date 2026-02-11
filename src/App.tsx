@@ -5,6 +5,7 @@ import { ApprovalTriggers } from './components/ApprovalTriggers';
 import { ApproversGroups } from './components/ApproversGroups';
 import { Templates } from './components/Templates';
 import { Reporting } from './components/Reporting';
+import { Toaster } from './components/ui/sonner';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="reporting" element={<Reporting />} />
         </Route>
       </Routes>
+      <Toaster />
     </BrowserRouter>
   );
 }
