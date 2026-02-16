@@ -60,7 +60,7 @@ export function ViewTriggerModal({ trigger, onClose, onSave, onDelete }: ViewTri
 
   const renderIcon = () => {
     const IconComponent = editedTrigger.icon;
-    return <IconComponent className="w-5 h-5 text-[#4262FF]" />;
+    return <IconComponent className="w-5 h-5 text-[#1a1a1a]" />;
   };
 
   return (
@@ -71,7 +71,7 @@ export function ViewTriggerModal({ trigger, onClose, onSave, onDelete }: ViewTri
           <div className="flex items-center gap-3">
             {renderIcon()}
             <div>
-              <h2 className="text-xl font-semibold text-[#050038]">{editedTrigger.name}</h2>
+              <h2 className="text-xl font-semibold text-[#1a1a1a]">{editedTrigger.name}</h2>
               <p className="text-sm text-[#6c757d] mt-0.5">View and edit trigger configuration</p>
             </div>
           </div>
@@ -87,30 +87,30 @@ export function ViewTriggerModal({ trigger, onClose, onSave, onDelete }: ViewTri
         <div className="p-6 space-y-6">
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-2">Add description</label>
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Add description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter a description for this trigger..."
-              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm min-h-[80px] resize-y"
+              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm min-h-[80px] resize-y"
             />
           </div>
 
           {/* Condition (When) */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-2">Condition (When)</label>
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Condition (When)</label>
             <input
               type="text"
               value={editedTrigger.when}
               onChange={(e) => setEditedTrigger({ ...editedTrigger, when: e.target.value })}
-              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm"
+              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
               placeholder="e.g., Discount > 20%"
             />
           </div>
 
           {/* Approvers (Then) */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-2">Approvers (Then)</label>
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Approvers (Then)</label>
             <div className="space-y-2">
               {editedTrigger.then.map((approver, idx) => (
                 <div key={idx} className="flex items-center gap-2">
@@ -122,7 +122,7 @@ export function ViewTriggerModal({ trigger, onClose, onSave, onDelete }: ViewTri
                       newThen[idx] = e.target.value;
                       setEditedTrigger({ ...editedTrigger, then: newThen });
                     }}
-                    className="flex-1 px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm"
+                    className="flex-1 px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
                     placeholder="Approver group name"
                   />
                   {editedTrigger.then.length > 1 && (
@@ -142,7 +142,7 @@ export function ViewTriggerModal({ trigger, onClose, onSave, onDelete }: ViewTri
                 onClick={() => {
                   setEditedTrigger({ ...editedTrigger, then: [...editedTrigger.then, ''] });
                 }}
-                className="text-sm text-[#4262FF] hover:underline font-medium"
+                className="text-sm text-[#1a1a1a] hover:underline font-medium"
               >
                 + Add approver
               </button>
@@ -151,7 +151,7 @@ export function ViewTriggerModal({ trigger, onClose, onSave, onDelete }: ViewTri
 
           {/* Scope */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-2">Scope</label>
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Scope</label>
             <div className="space-y-2">
               {editedTrigger.scope.map((s, idx) => (
                 <div key={idx} className="flex items-center gap-2">
@@ -163,7 +163,7 @@ export function ViewTriggerModal({ trigger, onClose, onSave, onDelete }: ViewTri
                       newScope[idx] = e.target.value;
                       setEditedTrigger({ ...editedTrigger, scope: newScope });
                     }}
-                    className="flex-1 px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm"
+                    className="flex-1 px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
                     placeholder="e.g., Enterprise, US"
                   />
                   {editedTrigger.scope.length > 1 && (
@@ -183,7 +183,7 @@ export function ViewTriggerModal({ trigger, onClose, onSave, onDelete }: ViewTri
                 onClick={() => {
                   setEditedTrigger({ ...editedTrigger, scope: [...editedTrigger.scope, ''] });
                 }}
-                className="text-sm text-[#4262FF] hover:underline font-medium"
+                className="text-sm text-[#1a1a1a] hover:underline font-medium"
               >
                 + Add scope
               </button>
@@ -192,11 +192,11 @@ export function ViewTriggerModal({ trigger, onClose, onSave, onDelete }: ViewTri
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-2">Status</label>
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Status</label>
             <select
               value={editedTrigger.status}
               onChange={(e) => setEditedTrigger({ ...editedTrigger, status: e.target.value as 'active' | 'paused' })}
-              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm"
+              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
             >
               <option value="active">Active</option>
               <option value="paused">Paused</option>
@@ -205,11 +205,11 @@ export function ViewTriggerModal({ trigger, onClose, onSave, onDelete }: ViewTri
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-2">Category</label>
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Category</label>
             <select
               value={editedTrigger.category}
               onChange={(e) => setEditedTrigger({ ...editedTrigger, category: e.target.value })}
-              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm"
+              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
             >
               <option value="pricing">Pricing & Discounts</option>
               <option value="terms">Commercial Terms</option>
@@ -230,14 +230,14 @@ export function ViewTriggerModal({ trigger, onClose, onSave, onDelete }: ViewTri
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-[#e1e4e8] rounded-md hover:bg-[#f8f9fa] text-[#050038] text-sm font-medium transition-colors"
+              className="px-4 py-2 border border-[#e1e4e8] rounded-md hover:bg-[#f8f9fa] text-[#1a1a1a] text-sm font-medium transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-4 py-2 bg-[#4262FF] text-white rounded-md hover:bg-[#3451E6] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+              className="px-4 py-2 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
             >
               <Save className="w-4 h-4" />
               {isSaving ? 'Saving...' : 'Save'}

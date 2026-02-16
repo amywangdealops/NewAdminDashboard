@@ -1,0 +1,176 @@
+/*
+ * ═══════════════════════════════════════════════
+ *  E&W Brand — CSS Custom Properties
+ *  Version 1.0.0
+ *  Source: Figma E&W Brand Handoff (node 21107-10335)
+ * ═══════════════════════════════════════════════
+ *
+ *  USAGE:
+ *  1. Add the Google Fonts link to your <head>:
+ *     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+ *
+ *  2. Import this file in your CSS:
+ *     @import './ew-brand.css';
+ *
+ *  3. Use the variables:
+ *     color: var(--ew-foreground);
+ *     background: var(--ew-background);
+ *     font-family: var(--ew-font-body);
+ */
+
+/* ─── Light Mode ─── */
+:root {
+  /* Fonts */
+  --ew-font-heading: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  --ew-font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Core palette */
+  --ew-primary: #1a1a1a;
+  --ew-primary-hover: #333333;
+  --ew-primary-foreground: #ffffff;
+  --ew-accent: #CFCCAE;
+  --ew-accent-foreground: #1a1a1a;
+
+  /* Surfaces */
+  --ew-background: #f7f7f5;
+  --ew-foreground: #1a1a1a;
+  --ew-card: #ffffff;
+  --ew-card-foreground: #1a1a1a;
+  --ew-secondary: #f0efe9;
+  --ew-secondary-foreground: #1a1a1a;
+  --ew-muted: #f0efe9;
+  --ew-muted-foreground: #666666;
+  --ew-input-background: #f5f4f0;
+
+  /* Borders */
+  --ew-border: #e2e0d8;
+  --ew-border-subtle: #eeede7;
+
+  /* Text hierarchy */
+  --ew-text-primary: #1a1a1a;
+  --ew-text-secondary: #666666;
+  --ew-text-tertiary: #999891;
+  --ew-text-muted: #aaaaaa;
+
+  /* Feedback */
+  --ew-destructive: #c53030;
+  --ew-destructive-foreground: #ffffff;
+  --ew-success: #2e7d32;
+  --ew-warning: #e65100;
+  --ew-info: #1565c0;
+
+  /* Focus */
+  --ew-ring: #1a1a1a;
+
+  /* Chart palette (earthy) */
+  --ew-chart-1: #7c9885;
+  --ew-chart-2: #b8c5a2;
+  --ew-chart-3: #CFCCAE;
+  --ew-chart-4: #8fa5b2;
+  --ew-chart-5: #a3927e;
+
+  /* Radius */
+  --ew-radius-sm: 0.25rem;
+  --ew-radius-md: 0.375rem;
+  --ew-radius-lg: 0.5rem;
+  --ew-radius-xl: 0.75rem;
+
+  /* Shadows */
+  --ew-shadow-xs: 0 1px 2px rgba(0,0,0,0.03);
+  --ew-shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+  --ew-shadow-md: 0 4px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.03);
+  --ew-shadow-lg: 0 4px 16px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.03);
+
+  /* Spacing */
+  --ew-page-px: 1.5rem;
+  --ew-page-py: 1.25rem;
+  --ew-section-gap: 1.25rem;
+  --ew-card-padding: 1.5rem;
+}
+
+/* ─── Dark Mode ─── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ew-primary: #f5f4f0;
+    --ew-primary-hover: #e2e0d8;
+    --ew-primary-foreground: #1a1a1a;
+    --ew-accent: #3d3c34;
+    --ew-accent-foreground: #f5f4f0;
+    --ew-background: #141413;
+    --ew-foreground: #f5f4f0;
+    --ew-card: #1c1c1a;
+    --ew-card-foreground: #f5f4f0;
+    --ew-secondary: #2a2a27;
+    --ew-secondary-foreground: #f5f4f0;
+    --ew-muted: #2a2a27;
+    --ew-muted-foreground: #999891;
+    --ew-input-background: #2a2a27;
+    --ew-border: #2a2a27;
+    --ew-border-subtle: #333330;
+    --ew-text-primary: #f5f4f0;
+    --ew-text-secondary: #c9c7be;
+    --ew-text-tertiary: #999891;
+    --ew-text-muted: #666660;
+    --ew-destructive: #c53030;
+    --ew-destructive-foreground: #fecaca;
+    --ew-ring: #666660;
+  }
+}
+
+/* Also support .dark class toggling */
+.dark {
+  --ew-primary: #f5f4f0;
+  --ew-primary-hover: #e2e0d8;
+  --ew-primary-foreground: #1a1a1a;
+  --ew-accent: #3d3c34;
+  --ew-accent-foreground: #f5f4f0;
+  --ew-background: #141413;
+  --ew-foreground: #f5f4f0;
+  --ew-card: #1c1c1a;
+  --ew-card-foreground: #f5f4f0;
+  --ew-secondary: #2a2a27;
+  --ew-secondary-foreground: #f5f4f0;
+  --ew-muted: #2a2a27;
+  --ew-muted-foreground: #999891;
+  --ew-input-background: #2a2a27;
+  --ew-border: #2a2a27;
+  --ew-border-subtle: #333330;
+  --ew-text-primary: #f5f4f0;
+  --ew-text-secondary: #c9c7be;
+  --ew-text-tertiary: #999891;
+  --ew-text-muted: #666660;
+  --ew-destructive: #c53030;
+  --ew-destructive-foreground: #fecaca;
+  --ew-ring: #666660;
+}
+
+
+/* ─── Base Styles (optional — remove if you only want tokens) ─── */
+
+.ew-base {
+  font-family: var(--ew-font-body);
+  color: var(--ew-foreground);
+  background-color: var(--ew-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.ew-base h1,
+.ew-base h2 {
+  font-family: var(--ew-font-heading);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.ew-base h3,
+.ew-base h4 {
+  font-family: var(--ew-font-body);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.ew-base h1 { font-size: 2.5rem; letter-spacing: -0.04em; }
+.ew-base h2 { font-size: 1.5rem; }
+.ew-base h3 { font-size: 1.125rem; }
+.ew-base h4 { font-size: 1rem; }

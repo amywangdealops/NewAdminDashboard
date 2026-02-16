@@ -59,10 +59,10 @@ function TemplateCard({
 
   return (
     <div
-      className={`group bg-white rounded-lg border border-[#e5e7eb] flex flex-col
+      className={`group bg-white rounded-lg border border-[#e2e0d8] flex flex-col
         transition-all duration-200
-        hover:shadow-[0_4px_16px_rgba(66,98,255,0.08)] hover:border-[#4262FF]/25
-        ${isExpanded ? 'shadow-[0_4px_16px_rgba(66,98,255,0.08)] border-[#4262FF]/25' : ''}
+        hover:shadow-[0_4px_16px_rgba(66,98,255,0.08)] hover:border-[#1a1a1a]/25
+        ${isExpanded ? 'shadow-[0_4px_16px_rgba(66,98,255,0.08)] border-[#1a1a1a]/25' : ''}
         ${compact ? 'p-3' : 'p-4'}`}
     >
       {/* Top: Icon + Title */}
@@ -75,19 +75,19 @@ function TemplateCard({
         aria-expanded={isExpanded}
         aria-label={`${isExpanded ? 'Collapse' : 'Expand'} details for ${template.name}`}
       >
-        <div className="flex-shrink-0 mt-0.5 w-7 h-7 rounded-md bg-[#4262FF]/[0.08] flex items-center justify-center">
-          <Layers className="w-3.5 h-3.5 text-[#4262FF]" />
+        <div className="flex-shrink-0 mt-0.5 w-7 h-7 rounded-md bg-[#1a1a1a]/[0.08] flex items-center justify-center">
+          <Layers className="w-3.5 h-3.5 text-[#1a1a1a]" />
         </div>
         <div className="min-w-0 flex-1">
           <h3
-            className={`font-semibold text-[#111827] leading-snug
+            className={`font-semibold text-[#1a1a1a] leading-snug
               ${compact ? 'text-[11px] line-clamp-1' : 'text-[13px] line-clamp-2'}`}
           >
             {template.name}
           </h3>
           {!compact && (
             <button
-              className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-[#9ca3af] hover:text-[#4262FF] transition-colors"
+              className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-[#999891] hover:text-[#1a1a1a] transition-colors"
               onClick={(e) => { e.stopPropagation(); onToggle(); }}
               tabIndex={-1}
             >
@@ -103,7 +103,7 @@ function TemplateCard({
       {/* Expandable Description */}
       {!compact && (
         <AnimatedCollapse open={isExpanded}>
-          <p className="text-[12px] text-[#6b7280] leading-relaxed mt-2 ml-[38px] pr-1">
+          <p className="text-[12px] text-[#666666] leading-relaxed mt-2 ml-[38px] pr-1">
             {template.description}
           </p>
         </AnimatedCollapse>
@@ -123,14 +123,14 @@ function TemplateCard({
 
       {/* Footer */}
       <div className={`flex items-center justify-between border-t border-[#f0f1f4] ml-0 ${compact ? 'pt-2 mt-2' : 'pt-3 mt-3'}`}>
-        <span className="text-[11px] text-[#9ca3af] tabular-nums">
+        <span className="text-[11px] text-[#999891] tabular-nums">
           Used {template.uses} {template.uses === 1 ? 'time' : 'times'}
         </span>
         <button
           onClick={(e) => { e.stopPropagation(); onUseTemplate(); }}
-          className={`inline-flex items-center gap-1.5 border border-[#e5e7eb] rounded-md
-            text-[#374151] font-medium transition-all duration-150
-            hover:bg-[#f9fafb] hover:border-[#4262FF]/25 hover:text-[#4262FF]
+          className={`inline-flex items-center gap-1.5 border border-[#e2e0d8] rounded-md
+            text-[#333333] font-medium transition-all duration-150
+            hover:bg-[#f9fafb] hover:border-[#1a1a1a]/25 hover:text-[#1a1a1a]
             active:scale-[0.98]
             ${compact ? 'px-2 py-1 text-[10px]' : 'px-2.5 py-1.5 text-[11px]'}`}
           aria-label={`Use template: ${template.name}`}
@@ -284,29 +284,29 @@ export function Templates() {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="border-b border-[#e5e7eb] bg-white px-6 py-3.5">
+      <header className="border-b border-[#e2e0d8] bg-white px-6 py-3.5">
         <div className="flex items-center justify-between gap-4 mb-3">
           <div className="min-w-0">
-            <h1 className="text-[15px] font-semibold text-[#111827] tracking-tight">Templates & Defaults</h1>
-            <p className="text-[#9ca3af] text-[12px] mt-0.5">
+            <h1 className="text-[15px] font-semibold text-[#1a1a1a] tracking-tight">Templates & Defaults</h1>
+            <p className="text-[#999891] text-[12px] mt-0.5">
               Pre-built approval trigger templates you can clone and customize
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#999891]" />
               <input
                 type="text"
                 placeholder="Search templates..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-48 h-8 pl-8 pr-3 bg-[#f5f6f8] border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] focus:bg-white text-[12px] transition-all placeholder:text-[#9ca3af]"
+                className="w-48 h-8 pl-8 pr-3 bg-[#f5f6f8] border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] focus:bg-white text-[12px] transition-all placeholder:text-[#999891]"
                 aria-label="Search templates"
               />
             </div>
             <button
               onClick={handleAddTemplate}
-              className="h-8 px-3 bg-[#4262FF] text-white rounded-md hover:bg-[#3451E6] inline-flex items-center gap-1.5 text-[12px] font-medium transition-all shadow-sm whitespace-nowrap flex-shrink-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20"
+              className="h-8 px-3 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] inline-flex items-center gap-1.5 text-[12px] font-medium transition-all shadow-sm whitespace-nowrap flex-shrink-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
               aria-label="Add new template"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -324,8 +324,8 @@ export function Templates() {
               onClick={() => setActiveCategory(cat)}
                 className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-150 ${
                   activeCategory === cat
-                    ? 'bg-[#4262FF] text-white shadow-sm'
-                    : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#374151]'
+                    ? 'bg-[#1a1a1a] text-white shadow-sm'
+                    : 'bg-[#f0efe9] text-[#666666] hover:bg-[#e2e0d8] hover:text-[#333333]'
                 }`}
             >
               {cat}
@@ -333,11 +333,11 @@ export function Templates() {
           ))}
           </div>
           {/* View Toggle */}
-          <div className="flex items-center gap-0.5 bg-[#f3f4f6] rounded-md p-0.5 flex-shrink-0">
+          <div className="flex items-center gap-0.5 bg-[#f0efe9] rounded-md p-0.5 flex-shrink-0">
             <button
               onClick={() => setCompact(false)}
               className={`p-1.5 rounded transition-all duration-150 ${
-                !compact ? 'bg-white text-[#111827] shadow-sm' : 'text-[#9ca3af] hover:text-[#374151]'
+                !compact ? 'bg-white text-[#1a1a1a] shadow-sm' : 'text-[#999891] hover:text-[#333333]'
               }`}
               aria-label="Default view"
               title="Default view"
@@ -347,7 +347,7 @@ export function Templates() {
             <button
               onClick={() => setCompact(true)}
               className={`p-1.5 rounded transition-all duration-150 ${
-                compact ? 'bg-white text-[#111827] shadow-sm' : 'text-[#9ca3af] hover:text-[#374151]'
+                compact ? 'bg-white text-[#1a1a1a] shadow-sm' : 'text-[#999891] hover:text-[#333333]'
               }`}
               aria-label="Compact view"
               title="Compact view"
@@ -361,13 +361,13 @@ export function Templates() {
       <div className="flex-1 overflow-auto p-6">
         {filteredTemplates.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-12 h-12 rounded-xl bg-[#f3f4f6] flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 rounded-xl bg-[#f0efe9] flex items-center justify-center mx-auto mb-3">
               <Layers className="w-6 h-6 text-[#d1d5db]" />
             </div>
-            <h3 className="text-[14px] font-semibold text-[#111827] mb-1">
+            <h3 className="text-[14px] font-semibold text-[#1a1a1a] mb-1">
               {searchQuery ? `No templates found matching "${searchQuery}"` : 'No templates found'}
             </h3>
-            <p className="text-[12px] text-[#9ca3af]">
+            <p className="text-[12px] text-[#999891]">
               {searchQuery ? 'Try a different search term' : 'Create your first template to get started'}
             </p>
           </div>

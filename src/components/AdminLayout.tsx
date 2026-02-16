@@ -48,20 +48,20 @@ export function AdminLayout() {
   const sidebarContent = (
     <>
       {/* Header */}
-      <div className="px-4 py-4 border-b border-[#e5e7eb] flex items-center justify-between">
+      <div className="px-4 py-4 border-b border-[#e2e0d8] flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-[#4262FF] flex items-center justify-center flex-shrink-0 shadow-sm">
+          <div className="w-7 h-7 rounded-lg bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
             <span className="text-white text-xs font-bold tracking-tight">A</span>
           </div>
           <div className="min-w-0">
-            <h1 className="font-semibold text-[#111827] text-[13px] leading-tight tracking-tight">Admin Portal</h1>
-            <p className="text-[11px] text-[#9ca3af] truncate leading-tight mt-0.5">{organizationConfig.displayName}</p>
+            <h1 className="font-medium text-[#1a1a1a] text-[13px] leading-tight tracking-tight">Admin Portal</h1>
+            <p className="text-[11px] text-[#999891] truncate leading-tight mt-0.5">{organizationConfig.displayName}</p>
           </div>
         </div>
         {isMobile && (
           <button
             onClick={() => setSidebarOpen(false)}
-            className="p-1 rounded-md hover:bg-[#f3f4f6] transition-colors text-[#9ca3af] hover:text-[#111827]"
+            className="p-1 rounded-md hover:bg-[#f0efe9] transition-colors text-[#999891] hover:text-[#1a1a1a]"
             aria-label="Close sidebar"
           >
             <X className="w-4 h-4" />
@@ -85,18 +85,18 @@ export function AdminLayout() {
                   className={`
                     flex items-center gap-2.5 px-2.5 py-[7px] rounded-md transition-all duration-150 text-[13px]
                     ${isActive
-                      ? 'bg-[#4262FF]/[0.08] text-[#4262FF] font-medium'
-                      : 'text-[#4b5563] hover:bg-[#f3f4f6] hover:text-[#111827]'
+                      ? 'bg-[#1a1a1a]/[0.06] text-[#1a1a1a] font-medium'
+                      : 'text-[#666666] hover:bg-[#f0efe9] hover:text-[#1a1a1a]'
                     }
                   `}
                 >
-                  <Icon className={`w-[15px] h-[15px] flex-shrink-0 ${isActive ? 'text-[#4262FF]' : 'text-[#9ca3af]'}`} />
+                  <Icon className={`w-[15px] h-[15px] flex-shrink-0 ${isActive ? 'text-[#1a1a1a]' : 'text-[#999891]'}`} />
                   <span>{item.label}</span>
                 </NavLink>
 
                 {/* Subnav */}
                 {item.subnav && isActive && (
-                  <div className="ml-[26px] mt-0.5 space-y-px border-l border-[#e5e7eb] pl-2.5">
+                  <div className="ml-[26px] mt-0.5 space-y-px border-l border-[#e2e0d8] pl-2.5">
                     {item.subnav.map((subitem) => {
                       const isSubActive = location.pathname === subitem.path;
                       return (
@@ -106,8 +106,8 @@ export function AdminLayout() {
                           className={`
                             block px-2 py-[5px] rounded text-[12px] transition-all duration-150
                             ${isSubActive
-                              ? 'text-[#4262FF] font-medium bg-[#4262FF]/[0.04]'
-                              : 'text-[#9ca3af] hover:text-[#4b5563]'
+                              ? 'text-[#1a1a1a] font-medium bg-[#1a1a1a]/[0.04]'
+                              : 'text-[#999891] hover:text-[#666666]'
                             }
                           `}
                         >
@@ -124,13 +124,13 @@ export function AdminLayout() {
       </nav>
 
       {/* Help Section */}
-      <div className="px-3 pb-3 pt-2 border-t border-[#e5e7eb]">
-        <div className="bg-[#f8f9fb] rounded-lg p-3">
+      <div className="px-3 pb-3 pt-2 border-t border-[#e2e0d8]">
+        <div className="bg-[#f5f4f0] rounded-lg p-3">
           <div className="flex items-start gap-2">
-            <HelpCircle className="w-3.5 h-3.5 text-[#9ca3af] mt-0.5 flex-shrink-0" />
+            <HelpCircle className="w-3.5 h-3.5 text-[#999891] mt-0.5 flex-shrink-0" />
             <div>
-              <div className="text-[12px] font-medium text-[#374151] leading-tight">Need help?</div>
-              <a href="#" className="text-[11px] text-[#4262FF] hover:text-[#3451E6] transition-colors mt-0.5 inline-flex items-center gap-1">
+              <div className="text-[12px] font-medium text-[#1a1a1a] leading-tight">Need help?</div>
+              <a href="#" className="text-[11px] text-[#666666] hover:text-[#1a1a1a] transition-colors mt-0.5 inline-flex items-center gap-1">
                 Contact support
                 <ExternalLink className="w-2.5 h-2.5" />
               </a>
@@ -142,22 +142,22 @@ export function AdminLayout() {
   );
 
   return (
-    <div className="flex h-screen bg-[#f8f9fb]">
+    <div className="flex h-screen bg-[#f7f7f5]">
       {/* Mobile top bar */}
       {isMobile && (
-        <div className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-[#e5e7eb] px-3 py-2.5 flex items-center gap-2.5">
+        <div className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-[#e2e0d8] px-3 py-2.5 flex items-center gap-2.5">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-1 rounded-md hover:bg-[#f3f4f6] transition-colors text-[#6b7280] hover:text-[#111827]"
+            className="p-1 rounded-md hover:bg-[#f0efe9] transition-colors text-[#666666] hover:text-[#1a1a1a]"
             aria-label="Open sidebar"
           >
             <Menu className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded bg-[#4262FF] flex items-center justify-center flex-shrink-0">
+            <div className="w-5 h-5 rounded bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
               <span className="text-white text-[9px] font-bold">A</span>
             </div>
-            <span className="font-semibold text-[#111827] text-[13px]">Admin Portal</span>
+            <span className="font-medium text-[#1a1a1a] text-[13px]">Admin Portal</span>
           </div>
         </div>
       )}
@@ -175,7 +175,7 @@ export function AdminLayout() {
       {isMobile ? (
         <aside
           className={`
-            fixed top-0 left-0 bottom-0 z-50 w-56 bg-white border-r border-[#e5e7eb] flex flex-col
+            fixed top-0 left-0 bottom-0 z-50 w-56 bg-white border-r border-[#e2e0d8] flex flex-col
             transform transition-transform duration-200 ease-in-out shadow-xl
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           `}
@@ -183,7 +183,7 @@ export function AdminLayout() {
           {sidebarContent}
         </aside>
       ) : (
-        <aside className="w-56 bg-white border-r border-[#e5e7eb] flex flex-col flex-shrink-0">
+        <aside className="w-56 bg-white border-r border-[#e2e0d8] flex flex-col flex-shrink-0">
           {sidebarContent}
         </aside>
       )}

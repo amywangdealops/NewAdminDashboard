@@ -79,35 +79,35 @@ export function Products() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <header className="border-b border-[#e5e7eb] bg-white px-6 py-3.5">
+      <header className="border-b border-[#e2e0d8] bg-white px-6 py-3.5">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-[15px] font-semibold text-[#111827] tracking-tight">Products</h1>
-            <p className="text-[#9ca3af] text-[12px] mt-0.5">Manage products and pricing models in your catalog</p>
+            <h1 className="text-[15px] font-semibold text-[#1a1a1a] tracking-tight">Products</h1>
+            <p className="text-[#999891] text-[12px] mt-0.5">Manage products and pricing models in your catalog</p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#999891]" />
               <input
                 type="text"
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-48 h-8 pl-8 pr-3 bg-[#f5f6f8] border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] focus:bg-white text-[12px] transition-all placeholder:text-[#9ca3af]"
+                className="w-48 h-8 pl-8 pr-3 bg-[#f5f6f8] border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] focus:bg-white text-[12px] transition-all placeholder:text-[#999891]"
                 aria-label="Search products"
               />
             </div>
             <button
               onClick={handleFilters}
-              className="h-8 px-2.5 border border-[#e5e7eb] rounded-md hover:bg-[#f9fafb] inline-flex items-center gap-1.5 text-[#374151] text-[12px] font-medium transition-colors whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20"
+              className="h-8 px-2.5 border border-[#e2e0d8] rounded-md hover:bg-[#f9fafb] inline-flex items-center gap-1.5 text-[#333333] text-[12px] font-medium transition-colors whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
               aria-label="Filter products"
             >
-              <Filter className="w-3.5 h-3.5 text-[#9ca3af]" />
+              <Filter className="w-3.5 h-3.5 text-[#999891]" />
               Filters
             </button>
             <button
               onClick={handleAddProduct}
-              className="h-8 px-3 bg-[#4262FF] text-white rounded-md hover:bg-[#3451E6] inline-flex items-center gap-1.5 text-[12px] font-medium transition-all shadow-sm whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 active:scale-[0.98]"
+              className="h-8 px-3 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] inline-flex items-center gap-1.5 text-[12px] font-medium transition-all shadow-sm whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 active:scale-[0.98]"
               aria-label="Add new product"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -119,18 +119,18 @@ export function Products() {
 
       {/* Product Table */}
       <div className="flex-1 overflow-auto p-6">
-        <div className="bg-white rounded-lg border border-[#e5e7eb] overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-white rounded-lg border border-[#e2e0d8] overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="overflow-x-auto">
           <table className="w-full min-w-[800px]">
-            <thead className="bg-[#f9fafb] border-b border-[#e5e7eb]">
+            <thead className="bg-[#f9fafb] border-b border-[#e2e0d8]">
               <tr>
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Product Name</th>
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Segment</th>
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Category</th>
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Pricing Model</th>
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Price</th>
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Triggers</th>
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Status</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Product Name</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Segment</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Category</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Pricing Model</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Price</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Triggers</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Status</th>
                 <th className="px-3 py-2.5 w-10"></th>
               </tr>
             </thead>
@@ -139,10 +139,10 @@ export function Products() {
                 <tr>
                   <td colSpan={8} className="px-4 py-12 text-center">
                     <Package className="w-10 h-10 text-[#e5e7eb] mx-auto mb-2" />
-                    <p className="text-[13px] font-medium text-[#374151]">
+                    <p className="text-[13px] font-medium text-[#333333]">
                       {searchQuery ? `No products found matching "${searchQuery}"` : 'No products found'}
                     </p>
-                    <p className="text-[12px] text-[#9ca3af] mt-0.5">
+                    <p className="text-[12px] text-[#999891] mt-0.5">
                       {searchQuery ? 'Try a different search term' : 'Add your first product to get started'}
                     </p>
                   </td>
@@ -152,22 +152,22 @@ export function Products() {
                 <tr key={product.id} className="hover:bg-[#f9fafb] transition-colors">
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2">
-                      <Package className="w-3.5 h-3.5 text-[#4262FF] flex-shrink-0" aria-hidden="true" />
-                      <span className="text-[13px] font-medium text-[#111827]">{product.name}</span>
+                      <Package className="w-3.5 h-3.5 text-[#1a1a1a] flex-shrink-0" aria-hidden="true" />
+                      <span className="text-[13px] font-medium text-[#1a1a1a]">{product.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-2.5 text-[13px] text-[#6b7280]">{product.segment}</td>
+                  <td className="px-4 py-2.5 text-[13px] text-[#666666]">{product.segment}</td>
                   <td className="px-4 py-2.5">
                     <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-[11px] font-medium">
                       {product.category}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-[13px] text-[#6b7280]">{product.pricing}</td>
-                  <td className="px-4 py-2.5 text-[13px] font-medium text-[#111827] tabular-nums">{product.price}</td>
+                  <td className="px-4 py-2.5 text-[13px] text-[#666666]">{product.pricing}</td>
+                  <td className="px-4 py-2.5 text-[13px] font-medium text-[#1a1a1a] tabular-nums">{product.price}</td>
                   <td className="px-4 py-2.5">
                     <button
                       onClick={() => handleViewTriggers(product.name, product.triggers)}
-                      className="text-[#4262FF] hover:text-[#3451E6] text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:ring-offset-1 rounded px-0.5 tabular-nums transition-colors"
+                      className="text-[#1a1a1a] hover:text-[#333333] text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:ring-offset-1 rounded px-0.5 tabular-nums transition-colors"
                       aria-label={`View ${product.triggers} triggers using ${product.name}`}
                     >
                       {product.triggers}
@@ -183,14 +183,14 @@ export function Products() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="text-[#9ca3af] hover:text-[#374151] p-1 rounded-md hover:bg-[#f3f4f6] transition-colors focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20"
+                          className="text-[#999891] hover:text-[#333333] p-1 rounded-md hover:bg-[#f0efe9] transition-colors focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
                           aria-label={`Actions for ${product.name}`}
                           aria-haspopup="true"
                         >
                           <MoreVertical className="w-3.5 h-3.5" aria-hidden="true" />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44 bg-white border border-[#e5e7eb] shadow-lg rounded-lg">
+                      <DropdownMenuContent align="end" className="w-44 bg-white border border-[#e2e0d8] shadow-lg rounded-lg">
                         <DropdownMenuItem
                           onClick={() => handleViewProduct(product)}
                           className="cursor-pointer text-[13px] focus:bg-[#f9fafb]"

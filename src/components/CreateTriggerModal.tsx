@@ -122,7 +122,7 @@ function TemplateReviewMode({
         {/* Header */}
         <div className="flex-shrink-0 border-b border-[#e1e4e8] px-6 py-4 flex items-center justify-between">
           <div className="min-w-0">
-            <h2 className="text-lg font-semibold text-[#050038]">Create Approval Trigger</h2>
+            <h2 className="text-lg font-semibold text-[#1a1a1a]">Create Approval Trigger</h2>
             <p className="text-sm text-[#6c757d] mt-0.5">Review and customize this template, then save.</p>
           </div>
           <button onClick={onClose} className="flex-shrink-0 p-2 hover:bg-[#f8f9fa] rounded-lg transition-colors">
@@ -135,40 +135,40 @@ function TemplateReviewMode({
           {/* Template source */}
           <div className="p-4 bg-[#f8f9fa] border border-[#e1e4e8] rounded-lg">
             <div className="flex items-center gap-2 mb-1.5">
-              <Layers className="w-4 h-4 text-[#4262FF] flex-shrink-0" />
-              <span className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider">From Template</span>
+              <Layers className="w-4 h-4 text-[#1a1a1a] flex-shrink-0" />
+              <span className="text-[10px] font-semibold text-[#999891] uppercase tracking-wider">From Template</span>
             </div>
-            <div className="text-sm font-medium text-[#050038] mb-1 leading-snug">{prefill.templateName}</div>
+            <div className="text-sm font-medium text-[#1a1a1a] mb-1 leading-snug">{prefill.templateName}</div>
             <div className="text-xs text-[#6c757d] leading-relaxed">{prefill.templateDescription}</div>
           </div>
 
           {/* Rule Name */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-1.5">Rule Name</label>
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5">Rule Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm"
+              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
             />
-            <p className="text-[11px] text-[#9ca3af] mt-1">This is the display name shown in the triggers list.</p>
+            <p className="text-[11px] text-[#999891] mt-1">This is the display name shown in the triggers list.</p>
           </div>
 
           {/* Condition / When */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-1.5">When (Condition)</label>
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5">When (Condition)</label>
             <input
               type="text"
               value={condition}
               onChange={(e) => setCondition(e.target.value)}
-              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm font-mono"
+              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm font-mono"
             />
-            <p className="text-[11px] text-[#9ca3af] mt-1">The condition that fires this trigger, e.g. "Discount &gt; 20%"</p>
+            <p className="text-[11px] text-[#999891] mt-1">The condition that fires this trigger, e.g. "Discount &gt; 20%"</p>
           </div>
 
           {/* Approvers */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-1.5">Then Require Approval From</label>
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5">Then Require Approval From</label>
             <div className="flex flex-wrap gap-2 mb-2">
               {approvers.map((a, i) => (
                 <span
@@ -199,7 +199,7 @@ function TemplateReviewMode({
                   }
                 }}
                 placeholder="Type to add approver…"
-                className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm"
+                className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
               />
               {showApproverSuggestions && filteredApproverSuggestions.length > 0 && (
                 <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[#e1e4e8] rounded-md shadow-lg max-h-40 overflow-y-auto">
@@ -207,7 +207,7 @@ function TemplateReviewMode({
                     <button
                       key={a}
                       onMouseDown={(e) => { e.preventDefault(); addApprover(a); }}
-                      className="w-full text-left px-3 py-2 text-sm text-[#050038] hover:bg-[#f0f4ff] transition-colors"
+                      className="w-full text-left px-3 py-2 text-sm text-[#1a1a1a] hover:bg-[#f5f4f0] transition-colors"
                     >
                       {a}
                     </button>
@@ -216,13 +216,13 @@ function TemplateReviewMode({
               )}
             </div>
             {approvers.length > 1 && (
-              <p className="text-[11px] text-[#9ca3af] mt-1">Approvals are sequential: {approvers.join(' → ')}</p>
+              <p className="text-[11px] text-[#999891] mt-1">Approvals are sequential: {approvers.join(' → ')}</p>
             )}
           </div>
 
           {/* Segments */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-1.5">Applies to Segments</label>
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5">Applies to Segments</label>
             <div className="flex flex-wrap gap-2 mb-2">
               {segments.map((s, i) => (
                 <span
@@ -253,7 +253,7 @@ function TemplateReviewMode({
                   }
                 }}
                 placeholder="Type to add segment…"
-                className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm"
+                className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
               />
               {showSegmentSuggestions && filteredSegmentSuggestions.length > 0 && (
                 <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[#e1e4e8] rounded-md shadow-lg max-h-40 overflow-y-auto">
@@ -261,7 +261,7 @@ function TemplateReviewMode({
                     <button
                       key={s}
                       onMouseDown={(e) => { e.preventDefault(); addSegment(s); }}
-                      className="w-full text-left px-3 py-2 text-sm text-[#050038] hover:bg-[#f0f4ff] transition-colors"
+                      className="w-full text-left px-3 py-2 text-sm text-[#1a1a1a] hover:bg-[#f5f4f0] transition-colors"
                     >
                       {s}
                     </button>
@@ -273,11 +273,11 @@ function TemplateReviewMode({
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-1.5">Category</label>
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5">Category</label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm"
+              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
             >
               {CATEGORY_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -286,9 +286,9 @@ function TemplateReviewMode({
           </div>
 
           {/* Live Preview */}
-          <div className="p-4 bg-[#f0f4ff] border border-[#4262FF]/20 rounded-lg">
-            <div className="text-[10px] font-semibold text-[#4262FF] uppercase tracking-wider mb-2">Live Preview</div>
-            <p className="text-sm text-[#050038] leading-relaxed">
+          <div className="p-4 bg-[#f5f4f0] border border-[#1a1a1a]/20 rounded-lg">
+            <div className="text-[10px] font-semibold text-[#1a1a1a] uppercase tracking-wider mb-2">Live Preview</div>
+            <p className="text-sm text-[#1a1a1a] leading-relaxed">
               When <span className="font-semibold">{condition || '…'}</span>, require approval from{' '}
               <span className="font-semibold">{approvers.length > 0 ? approvers.join(' → ') : '…'}</span>
               {segments.length > 0 && segments[0] !== 'All segments' && (
@@ -302,13 +302,13 @@ function TemplateReviewMode({
         <div className="flex-shrink-0 border-t border-[#e1e4e8] px-6 py-4 flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-[#e1e4e8] rounded-md hover:bg-[#f8f9fa] text-[#050038] text-sm font-medium transition-colors"
+            className="px-4 py-2 border border-[#e1e4e8] rounded-md hover:bg-[#f8f9fa] text-[#1a1a1a] text-sm font-medium transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-5 py-2 bg-[#4262FF] text-white rounded-md hover:bg-[#3451E6] flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+            className="px-5 py-2 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
           >
             <Check className="w-4 h-4" />
             Save Trigger
@@ -428,14 +428,14 @@ function WizardMode({
         <div key={s} className="flex items-center gap-2">
           <div className={`
             w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all
-            ${s < step ? 'bg-[#4262FF] text-white' : ''}
-            ${s === step ? 'bg-[#4262FF] text-white ring-4 ring-[#4262FF]/20' : ''}
+            ${s < step ? 'bg-[#1a1a1a] text-white' : ''}
+            ${s === step ? 'bg-[#1a1a1a] text-white ring-4 ring-[#1a1a1a]/20' : ''}
             ${s > step ? 'bg-[#e1e4e8] text-[#6c757d]' : ''}
           `}>
             {s < step ? <Check className="w-4 h-4" /> : s}
           </div>
           {s < 4 && (
-            <div className={`w-12 h-0.5 ${s < step ? 'bg-[#4262FF]' : 'bg-[#e1e4e8]'}`} />
+            <div className={`w-12 h-0.5 ${s < step ? 'bg-[#1a1a1a]' : 'bg-[#e1e4e8]'}`} />
           )}
         </div>
       ))}
@@ -448,7 +448,7 @@ function WizardMode({
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-[#e1e4e8] px-6 py-4 flex items-center justify-between z-10">
           <div>
-            <h2 className="text-xl font-semibold text-[#050038]">Create Approval Trigger</h2>
+            <h2 className="text-xl font-semibold text-[#1a1a1a]">Create Approval Trigger</h2>
             <p className="text-sm text-[#6c757d] mt-0.5">
               {step === 1 && "What scenario should trigger an approval?"}
               {step === 2 && "When should this trigger fire?"}
@@ -468,7 +468,7 @@ function WizardMode({
           {/* Step 1 */}
           {step === 1 && (
             <div>
-              <h3 className="text-lg font-semibold text-[#050038] mb-2">What happened?</h3>
+              <h3 className="text-lg font-semibold text-[#1a1a1a] mb-2">What happened?</h3>
               <p className="text-sm text-[#6c757d] mb-6">Choose the type of event that should trigger an approval</p>
               <div className="space-y-3">
                 {triggerTypes.map((type) => (
@@ -476,15 +476,15 @@ function WizardMode({
                     key={type.id}
                     onClick={() => setSelectedType(type.id)}
                     className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                      selectedType === type.id ? 'border-[#4262FF] bg-[#f0f4ff]' : 'border-[#e1e4e8] hover:border-[#4262FF]/30 bg-white'
+                      selectedType === type.id ? 'border-[#1a1a1a] bg-[#f5f4f0]' : 'border-[#e1e4e8] hover:border-[#1a1a1a]/30 bg-white'
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      {type.icon && <type.icon className="w-6 h-6 text-[#4262FF] mt-0.5" />}
+                      {type.icon && <type.icon className="w-6 h-6 text-[#1a1a1a] mt-0.5" />}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-[#050038]">{type.title}</h4>
-                          {selectedType === type.id && <Check className="w-4 h-4 text-[#4262FF]" />}
+                          <h4 className="font-semibold text-[#1a1a1a]">{type.title}</h4>
+                          {selectedType === type.id && <Check className="w-4 h-4 text-[#1a1a1a]" />}
                         </div>
                         <p className="text-sm text-[#6c757d] mb-2">{type.description}</p>
                         {selectedType === type.id && (
@@ -494,7 +494,7 @@ function WizardMode({
                             </div>
                             <div className="flex flex-wrap gap-2">
                               {type.examples.map((ex, idx) => (
-                                <span key={idx} className="px-2 py-1 bg-white border border-[#e1e4e8] rounded text-xs text-[#050038]">{ex}</span>
+                                <span key={idx} className="px-2 py-1 bg-white border border-[#e1e4e8] rounded text-xs text-[#1a1a1a]">{ex}</span>
                               ))}
                             </div>
                           </div>
@@ -510,29 +510,29 @@ function WizardMode({
           {/* Step 2 */}
           {step === 2 && selectedType && (
             <div>
-              <h3 className="text-lg font-semibold text-[#050038] mb-2">When should this trigger?</h3>
+              <h3 className="text-lg font-semibold text-[#1a1a1a] mb-2">When should this trigger?</h3>
               <p className="text-sm text-[#6c757d] mb-6">Define the specific condition that activates this approval</p>
 
               {selectedType === 'discount' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#050038] mb-2">Discount threshold</label>
+                    <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Discount threshold</label>
                     <div className="flex gap-3">
-                      <select value={discountOperator} onChange={e => setDiscountOperator(e.target.value)} className="flex-1 px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm">
+                      <select value={discountOperator} onChange={e => setDiscountOperator(e.target.value)} className="flex-1 px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm">
                         <option>Greater than</option>
                         <option>Greater than or equal to</option>
                         <option>Equal to</option>
                       </select>
-                      <input type="number" value={discountValue} onChange={e => setDiscountValue(e.target.value)} placeholder="20" className="w-24 px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm" />
-                      <select value={discountUnit} onChange={e => setDiscountUnit(e.target.value)} className="w-20 px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm">
+                      <input type="number" value={discountValue} onChange={e => setDiscountValue(e.target.value)} placeholder="20" className="w-24 px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm" />
+                      <select value={discountUnit} onChange={e => setDiscountUnit(e.target.value)} className="w-20 px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm">
                         <option>%</option>
                         <option>$</option>
                       </select>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#050038] mb-2">Apply to segments (optional)</label>
-                    <select value={segment} onChange={e => setSegment(e.target.value)} className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm">
+                    <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Apply to segments (optional)</label>
+                    <select value={segment} onChange={e => setSegment(e.target.value)} className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm">
                       <option>All segments</option>
                       <option>Enterprise only</option>
                       <option>Mid-Market only</option>
@@ -545,8 +545,8 @@ function WizardMode({
               {selectedType === 'payment-terms' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#050038] mb-2">Payment term</label>
-                    <select value={paymentTerm} onChange={e => setPaymentTerm(e.target.value)} className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm">
+                    <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Payment term</label>
+                    <select value={paymentTerm} onChange={e => setPaymentTerm(e.target.value)} className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm">
                       <option>Net 30</option>
                       <option>Net 45</option>
                       <option>Net 60</option>
@@ -556,8 +556,8 @@ function WizardMode({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#050038] mb-2">Apply to segments (optional)</label>
-                    <select value={segment} onChange={e => setSegment(e.target.value)} className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm">
+                    <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Apply to segments (optional)</label>
+                    <select value={segment} onChange={e => setSegment(e.target.value)} className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm">
                       <option>All segments</option>
                       <option>Enterprise only</option>
                       <option>Mid-Market only</option>
@@ -568,9 +568,9 @@ function WizardMode({
               )}
 
               {/* Preview */}
-              <div className="mt-6 p-4 bg-[#f0f4ff] border border-[#4262FF]/20 rounded-lg">
-                <div className="text-xs text-[#4262FF] font-medium mb-2">PREVIEW</div>
-                <div className="text-sm text-[#050038]">
+              <div className="mt-6 p-4 bg-[#f5f4f0] border border-[#1a1a1a]/20 rounded-lg">
+                <div className="text-xs text-[#1a1a1a] font-medium mb-2">PREVIEW</div>
+                <div className="text-sm text-[#1a1a1a]">
                   Triggers when {getConditionText()} for {segment}
                 </div>
               </div>
@@ -580,12 +580,12 @@ function WizardMode({
           {/* Step 3 */}
           {step === 3 && (
             <div>
-              <h3 className="text-lg font-semibold text-[#050038] mb-2">Who needs to approve?</h3>
+              <h3 className="text-lg font-semibold text-[#1a1a1a] mb-2">Who needs to approve?</h3>
               <p className="text-sm text-[#6c757d] mb-6">Select approval groups and set escalation rules</p>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#050038] mb-2">Primary approver group</label>
-                  <select value={approverGroup} onChange={e => setApproverGroup(e.target.value)} className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm">
+                  <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Primary approver group</label>
+                  <select value={approverGroup} onChange={e => setApproverGroup(e.target.value)} className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm">
                     <option>Deal Desk</option>
                     <option>Finance</option>
                     <option>VP of Sales</option>
@@ -597,18 +597,18 @@ function WizardMode({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#050038] mb-2">Required approvals</label>
+                  <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Required approvals</label>
                   <input
                     type="number"
                     min="1"
                     value={requiredApprovals}
                     onChange={e => setRequiredApprovals(e.target.value)}
-                    className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm"
+                    className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
                   />
                   <p className="text-xs text-[#6c757d] mt-1">Number of approvals needed from this group</p>
                 </div>
                 <div className="pt-4 border-t border-[#e1e4e8]">
-                  <button className="text-sm text-[#4262FF] hover:underline font-medium">+ Add escalation approver</button>
+                  <button className="text-sm text-[#1a1a1a] hover:underline font-medium">+ Add escalation approver</button>
                   <p className="text-xs text-[#6c757d] mt-1">Optional: require additional approval if conditions are met</p>
                 </div>
               </div>
@@ -618,12 +618,12 @@ function WizardMode({
           {/* Step 4 */}
           {step === 4 && (
             <div>
-              <h3 className="text-lg font-semibold text-[#050038] mb-2">Review and confirm</h3>
+              <h3 className="text-lg font-semibold text-[#1a1a1a] mb-2">Review and confirm</h3>
               <p className="text-sm text-[#6c757d] mb-6">Make sure everything looks correct before saving</p>
               <div className="space-y-4">
                 <div className="p-4 bg-[#f8f9fa] border border-[#e1e4e8] rounded-lg">
-                  <h4 className="text-sm font-semibold text-[#050038] mb-3">Plain English Summary</h4>
-                  <p className="text-sm text-[#050038] leading-relaxed">
+                  <h4 className="text-sm font-semibold text-[#1a1a1a] mb-3">Plain English Summary</h4>
+                  <p className="text-sm text-[#1a1a1a] leading-relaxed">
                     If a rep sets <span className="font-semibold">{getConditionText()}</span> on a deal for{' '}
                     <span className="font-semibold">{segment}</span>, approval is required from{' '}
                     <span className="font-semibold">{approverGroup}</span> ({requiredApprovals} approval needed).
@@ -632,36 +632,36 @@ function WizardMode({
 
                 <div className="space-y-3">
                   <div className="flex items-start gap-3 p-3 bg-white border border-[#e1e4e8] rounded-lg">
-                    <DollarSign className="w-5 h-5 text-[#4262FF] mt-0.5 flex-shrink-0" />
+                    <DollarSign className="w-5 h-5 text-[#1a1a1a] mt-0.5 flex-shrink-0" />
                     <div className="min-w-0">
                       <div className="text-xs text-[#6c757d]">TRIGGER TYPE</div>
-                      <div className="text-sm font-medium text-[#050038]">{triggerTypes.find(t => t.id === selectedType)?.title}</div>
+                      <div className="text-sm font-medium text-[#1a1a1a]">{triggerTypes.find(t => t.id === selectedType)?.title}</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-3 p-3 bg-white border border-[#e1e4e8] rounded-lg">
-                    <Settings className="w-5 h-5 text-[#4262FF] mt-0.5 flex-shrink-0" />
+                    <Settings className="w-5 h-5 text-[#1a1a1a] mt-0.5 flex-shrink-0" />
                     <div className="min-w-0">
                       <div className="text-xs text-[#6c757d]">CONDITION</div>
-                      <div className="text-sm font-medium text-[#050038]">{getConditionText()} for {segment}</div>
+                      <div className="text-sm font-medium text-[#1a1a1a]">{getConditionText()} for {segment}</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-3 p-3 bg-white border border-[#e1e4e8] rounded-lg">
-                    <Users className="w-5 h-5 text-[#4262FF] mt-0.5 flex-shrink-0" />
+                    <Users className="w-5 h-5 text-[#1a1a1a] mt-0.5 flex-shrink-0" />
                     <div className="min-w-0">
                       <div className="text-xs text-[#6c757d]">APPROVERS</div>
-                      <div className="text-sm font-medium text-[#050038]">{approverGroup} ({requiredApprovals} approval required)</div>
+                      <div className="text-sm font-medium text-[#1a1a1a]">{approverGroup} ({requiredApprovals} approval required)</div>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#050038] mb-2">Trigger name (optional)</label>
+                  <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Trigger name (optional)</label>
                   <input
                     type="text"
                     value={triggerName}
                     onChange={e => setTriggerName(e.target.value)}
                     placeholder={`${approverGroup} — ${getConditionText()}`}
-                    className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm"
+                    className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
                   />
                   <p className="text-xs text-[#6c757d] mt-1">Leave blank to auto-generate from conditions</p>
                 </div>
@@ -675,19 +675,19 @@ function WizardMode({
           <button
             onClick={handleBack}
             disabled={step === 1}
-            className="h-9 px-4 text-[#6c757d] hover:text-[#050038] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors inline-flex items-center"
+            className="h-9 px-4 text-[#6c757d] hover:text-[#1a1a1a] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors inline-flex items-center"
           >
             Back
           </button>
           <div className="flex items-center gap-3">
-            <button onClick={onClose} className="h-9 px-4 border border-[#e1e4e8] rounded-md hover:bg-[#f8f9fa] text-[#050038] text-sm font-medium transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20">
+            <button onClick={onClose} className="h-9 px-4 border border-[#e1e4e8] rounded-md hover:bg-[#f8f9fa] text-[#1a1a1a] text-sm font-medium transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20">
               Cancel
             </button>
             {step < 4 ? (
               <button
                 onClick={handleNext}
                 disabled={step === 1 && !selectedType}
-                className="h-9 px-4 bg-[#4262FF] text-white rounded-md hover:bg-[#3451E6] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 text-sm font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20"
+                className="h-9 px-4 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 text-sm font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
               >
                 Continue
                 <ChevronRight className="w-4 h-4" />
@@ -695,7 +695,7 @@ function WizardMode({
             ) : (
               <button
                 onClick={handleSaveTrigger}
-                className="h-9 px-4 bg-[#4262FF] text-white rounded-md hover:bg-[#3451E6] inline-flex items-center gap-2 text-sm font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20"
+                className="h-9 px-4 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] inline-flex items-center gap-2 text-sm font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
               >
                 <Check className="w-4 h-4" />
                 Save Trigger

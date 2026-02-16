@@ -112,11 +112,11 @@ export function Reporting() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <header className="border-b border-[#e5e7eb] bg-white px-6 py-3.5">
+      <header className="border-b border-[#e2e0d8] bg-white px-6 py-3.5">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-[15px] font-semibold text-[#111827] tracking-tight">Reporting</h1>
-            <p className="text-[#9ca3af] text-[12px] mt-0.5">
+            <h1 className="text-[15px] font-semibold text-[#1a1a1a] tracking-tight">Reporting</h1>
+            <p className="text-[#999891] text-[12px] mt-0.5">
               Approval performance, bottlenecks, and trigger impact analysis
             </p>
           </div>
@@ -125,21 +125,21 @@ export function Reporting() {
             <div className="relative">
               <button
                 onClick={() => setShowTimePicker(!showTimePicker)}
-                className="h-8 px-2.5 border border-[#e5e7eb] rounded-md hover:bg-[#f9fafb] inline-flex items-center gap-1.5 text-[#374151] text-[12px] font-medium transition-colors whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20"
+                className="h-8 px-2.5 border border-[#e2e0d8] rounded-md hover:bg-[#f9fafb] inline-flex items-center gap-1.5 text-[#333333] text-[12px] font-medium transition-colors whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
               >
-                <Clock className="w-3.5 h-3.5 text-[#9ca3af]" />
+                <Clock className="w-3.5 h-3.5 text-[#999891]" />
                 {timePeriod}
-                <ChevronDown className="w-3 h-3 text-[#9ca3af]" />
+                <ChevronDown className="w-3 h-3 text-[#999891]" />
               </button>
               {showTimePicker && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowTimePicker(false)} />
-                  <div className="absolute right-0 top-full mt-1 bg-white border border-[#e5e7eb] rounded-lg shadow-lg z-20 py-1 min-w-[160px]">
+                  <div className="absolute right-0 top-full mt-1 bg-white border border-[#e2e0d8] rounded-lg shadow-lg z-20 py-1 min-w-[160px]">
                     {TIME_PERIODS.map(p => (
                       <button
                         key={p}
                         onClick={() => { setTimePeriod(p); setShowTimePicker(false); }}
-                        className={`w-full text-left px-3 py-1.5 text-[12px] hover:bg-[#f9fafb] transition-colors ${p === timePeriod ? 'bg-[#4262FF]/5 text-[#4262FF] font-medium' : 'text-[#374151]'}`}
+                        className={`w-full text-left px-3 py-1.5 text-[12px] hover:bg-[#f9fafb] transition-colors ${p === timePeriod ? 'bg-[#1a1a1a]/5 text-[#1a1a1a] font-medium' : 'text-[#333333]'}`}
                       >
                         {p}
                       </button>
@@ -149,20 +149,20 @@ export function Reporting() {
               )}
             </div>
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#999891]" />
               <input
                 type="text"
                 placeholder="Search reports..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-40 h-8 pl-8 pr-3 bg-[#f5f6f8] border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] focus:bg-white text-[12px] transition-all placeholder:text-[#9ca3af]"
+                className="w-40 h-8 pl-8 pr-3 bg-[#f5f6f8] border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] focus:bg-white text-[12px] transition-all placeholder:text-[#999891]"
               />
             </div>
             <button
               onClick={handleExport}
-              className="h-8 px-2.5 border border-[#e5e7eb] rounded-md hover:bg-[#f9fafb] inline-flex items-center gap-1.5 text-[#374151] text-[12px] font-medium transition-colors whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20"
+              className="h-8 px-2.5 border border-[#e2e0d8] rounded-md hover:bg-[#f9fafb] inline-flex items-center gap-1.5 text-[#333333] text-[12px] font-medium transition-colors whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
             >
-              <Download className="w-3.5 h-3.5 text-[#9ca3af]" />
+              <Download className="w-3.5 h-3.5 text-[#999891]" />
               Export
             </button>
           </div>
@@ -170,7 +170,7 @@ export function Reporting() {
       </header>
 
       {/* Sub-tab nav */}
-      <div className="border-b border-[#e5e7eb] bg-white px-6">
+      <div className="border-b border-[#e2e0d8] bg-white px-6">
         <nav className="flex gap-0 -mb-px" role="tablist">
           {TABS.map(tab => {
             const Icon = tab.icon;
@@ -183,8 +183,8 @@ export function Reporting() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`relative px-3 py-2 text-[12px] font-medium inline-flex items-center gap-1.5 transition-colors border-b-2 ${
                   isActive
-                    ? 'border-[#4262FF] text-[#4262FF]'
-                    : 'border-transparent text-[#9ca3af] hover:text-[#374151] hover:border-[#e5e7eb]'
+                    ? 'border-[#1a1a1a] text-[#1a1a1a]'
+                    : 'border-transparent text-[#999891] hover:text-[#333333] hover:border-[#e2e0d8]'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -213,7 +213,7 @@ function KpiCard({ label, value, subtitle, icon: Icon, trend, trendLabel, color 
   color: string;
 }) {
   return (
-    <div className="bg-white border border-[#e5e7eb] rounded-lg p-3.5 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-shadow">
+    <div className="bg-white border border-[#e2e0d8] rounded-lg p-3.5 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-shadow">
       <div className="flex items-start justify-between mb-1.5">
         <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ backgroundColor: `${color}10` }}>
           <Icon className="w-3.5 h-3.5" style={{ color }} />
@@ -227,9 +227,9 @@ function KpiCard({ label, value, subtitle, icon: Icon, trend, trendLabel, color 
           </span>
         )}
       </div>
-      <div className="text-[18px] font-bold text-[#111827] tabular-nums leading-tight">{value}</div>
-      <div className="text-[10px] text-[#9ca3af] mt-0.5">{label}</div>
-      {subtitle && <div className="text-[10px] text-[#9ca3af] mt-0.5 italic">{subtitle}</div>}
+      <div className="text-[18px] font-bold text-[#1a1a1a] tabular-nums leading-tight">{value}</div>
+      <div className="text-[10px] text-[#999891] mt-0.5">{label}</div>
+      {subtitle && <div className="text-[10px] text-[#999891] mt-0.5 italic">{subtitle}</div>}
     </div>
   );
 }
@@ -244,16 +244,16 @@ function OverviewTab({ kpi, timePeriod }: { kpi: typeof KPI_DATA['Last 30 Days']
         <KpiCard label="Pending Now" value={kpi.pending} icon={Clock} color="#f59e0b" />
         <KpiCard label="Rejection Rate" value={`${kpi.rejectionRate}%`} icon={XCircle} trend={2} color="#ef4444" />
         <KpiCard label="VP/CFO Reviews" value={kpi.vpReviews + kpi.cfoReviews} icon={UserCheck} color="#8b5cf6" subtitle={`${kpi.vpReviews} VP · ${kpi.cfoReviews} CFO`} />
-        <KpiCard label="Rules Active" value={47} icon={Shield} color="#4262FF" subtitle="3 paused" />
+        <KpiCard label="Rules Active" value={47} icon={Shield} color="#1a1a1a" subtitle="3 paused" />
       </div>
 
       {/* Two-column: Trend + Time Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Weekly Approval Trend */}
-        <div className="bg-white border border-[#e5e7eb] rounded-lg p-4">
+        <div className="bg-white border border-[#e2e0d8] rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[13px] font-semibold text-[#111827]">Weekly Approval Volume</h3>
-            <span className="text-[10px] text-[#9ca3af]">Last 6 weeks</span>
+            <h3 className="text-[13px] font-semibold text-[#1a1a1a]">Weekly Approval Volume</h3>
+            <span className="text-[10px] text-[#999891]">Last 6 weeks</span>
           </div>
           <div className="flex items-end gap-2.5 h-32 px-1">
             {WEEKLY_TREND.map((w, idx) => {
@@ -262,54 +262,54 @@ function OverviewTab({ kpi, timePeriod }: { kpi: typeof KPI_DATA['Last 30 Days']
               const isCurrentWeek = idx === WEEKLY_TREND.length - 1;
               return (
                 <div key={w.week} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-[10px] font-medium text-[#111827] tabular-nums">{w.approvals}</span>
+                  <span className="text-[10px] font-medium text-[#1a1a1a] tabular-nums">{w.approvals}</span>
                   <div className="w-full relative" style={{ height: '100px' }}>
                     <div
-                      className={`absolute bottom-0 w-full rounded-t transition-all ${isCurrentWeek ? 'bg-[#4262FF]/25 border-2 border-[#4262FF] border-b-0' : 'bg-[#4262FF]/70'}`}
+                      className={`absolute bottom-0 w-full rounded-t transition-all ${isCurrentWeek ? 'bg-[#1a1a1a]/25 border-2 border-[#1a1a1a] border-b-0' : 'bg-[#1a1a1a]/70'}`}
                       style={{ height: `${height}%` }}
                     />
                   </div>
-                  <span className={`text-[10px] ${isCurrentWeek ? 'font-medium text-[#4262FF]' : 'text-[#9ca3af]'}`}>{w.week}</span>
+                  <span className={`text-[10px] ${isCurrentWeek ? 'font-medium text-[#1a1a1a]' : 'text-[#999891]'}`}>{w.week}</span>
                 </div>
               );
             })}
           </div>
-          <div className="mt-3 pt-2.5 border-t border-[#f0f1f4] flex items-center justify-between text-[10px] text-[#9ca3af]">
-            <span>Avg. weekly: <span className="font-medium text-[#111827]">78</span></span>
-            <span className="text-[#4262FF]">Current week (partial)</span>
+          <div className="mt-3 pt-2.5 border-t border-[#f0f1f4] flex items-center justify-between text-[10px] text-[#999891]">
+            <span>Avg. weekly: <span className="font-medium text-[#1a1a1a]">78</span></span>
+            <span className="text-[#1a1a1a]">Current week (partial)</span>
           </div>
         </div>
 
         {/* Approval Time Distribution */}
-        <div className="bg-white border border-[#e5e7eb] rounded-lg p-4">
+        <div className="bg-white border border-[#e2e0d8] rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[13px] font-semibold text-[#111827]">Approval Time Distribution</h3>
-            <span className="text-[10px] text-[#9ca3af]">{timePeriod}</span>
+            <h3 className="text-[13px] font-semibold text-[#1a1a1a]">Approval Time Distribution</h3>
+            <span className="text-[10px] text-[#999891]">{timePeriod}</span>
           </div>
           <div className="space-y-2">
             {APPROVAL_TIME_DISTRIBUTION.map(d => (
               <div key={d.bucket}>
                 <div className="flex items-center justify-between text-[11px] mb-0.5">
-                  <span className="text-[#374151] font-medium">{d.bucket}</span>
-                  <span className="text-[#9ca3af] tabular-nums">{d.count} ({d.pct}%)</span>
+                  <span className="text-[#333333] font-medium">{d.bucket}</span>
+                  <span className="text-[#999891] tabular-nums">{d.count} ({d.pct}%)</span>
                 </div>
-                <div className="h-1.5 bg-[#f3f4f6] rounded-full overflow-hidden">
+                <div className="h-1.5 bg-[#f0efe9] rounded-full overflow-hidden">
                   <div className="h-full rounded-full transition-all" style={{ width: `${d.pct}%`, backgroundColor: d.color }} />
                 </div>
               </div>
             ))}
           </div>
           <div className="mt-3 pt-2.5 border-t border-[#f0f1f4] flex items-center gap-1.5 text-[10px]">
-            <Info className="w-3 h-3 text-[#9ca3af]" />
-            <span className="text-[#9ca3af]">72% within 4h (SLA target: 80%)</span>
+            <Info className="w-3 h-3 text-[#999891]" />
+            <span className="text-[#999891]">72% within 4h (SLA target: 80%)</span>
           </div>
         </div>
       </div>
 
       {/* Key Insights */}
-      <div className="bg-[#4262FF]/[0.03] border border-[#4262FF]/15 rounded-lg p-4">
-        <h3 className="text-[13px] font-semibold text-[#111827] mb-2.5 flex items-center gap-1.5">
-          <Activity className="w-3.5 h-3.5 text-[#4262FF]" />
+      <div className="bg-[#1a1a1a]/[0.03] border border-[#1a1a1a]/15 rounded-lg p-4">
+        <h3 className="text-[13px] font-semibold text-[#1a1a1a] mb-2.5 flex items-center gap-1.5">
+          <Activity className="w-3.5 h-3.5 text-[#1a1a1a]" />
           Key Insights — {timePeriod}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -318,8 +318,8 @@ function OverviewTab({ kpi, timePeriod }: { kpi: typeof KPI_DATA['Last 30 Days']
               <AlertTriangle className="w-2.5 h-2.5 text-red-600" />
             </div>
             <div>
-              <div className="text-[12px] font-medium text-[#111827]">VP Approval is #1 bottleneck</div>
-              <div className="text-[10px] text-[#9ca3af] mt-0.5 leading-relaxed">Avg 8.4h — 2x slower than SLA. 6 pending.</div>
+              <div className="text-[12px] font-medium text-[#1a1a1a]">VP Approval is #1 bottleneck</div>
+              <div className="text-[10px] text-[#999891] mt-0.5 leading-relaxed">Avg 8.4h — 2x slower than SLA. 6 pending.</div>
             </div>
           </div>
           <div className="flex items-start gap-2">
@@ -327,8 +327,8 @@ function OverviewTab({ kpi, timePeriod }: { kpi: typeof KPI_DATA['Last 30 Days']
               <Zap className="w-2.5 h-2.5 text-amber-600" />
             </div>
             <div>
-              <div className="text-[12px] font-medium text-[#111827]">Multi-Year &gt; 3yr: 22% rejection</div>
-              <div className="text-[10px] text-[#9ca3af] mt-0.5 leading-relaxed">Consider lowering to 2yr threshold.</div>
+              <div className="text-[12px] font-medium text-[#1a1a1a]">Multi-Year &gt; 3yr: 22% rejection</div>
+              <div className="text-[10px] text-[#999891] mt-0.5 leading-relaxed">Consider lowering to 2yr threshold.</div>
             </div>
           </div>
           <div className="flex items-start gap-2">
@@ -336,8 +336,8 @@ function OverviewTab({ kpi, timePeriod }: { kpi: typeof KPI_DATA['Last 30 Days']
               <TrendingDown className="w-2.5 h-2.5 text-emerald-600" />
             </div>
             <div>
-              <div className="text-[12px] font-medium text-[#111827]">Deal Desk turnaround +5%</div>
-              <div className="text-[10px] text-[#9ca3af] mt-0.5 leading-relaxed">Down to 0.8d. Yi-an Zhang leads at 94% SLA.</div>
+              <div className="text-[12px] font-medium text-[#1a1a1a]">Deal Desk turnaround +5%</div>
+              <div className="text-[10px] text-[#999891] mt-0.5 leading-relaxed">Down to 0.8d. Yi-an Zhang leads at 94% SLA.</div>
             </div>
           </div>
         </div>
@@ -350,22 +350,22 @@ function BottlenecksTab() {
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-[13px] font-semibold text-[#111827] mb-0.5 flex items-center gap-1.5">
+        <h3 className="text-[13px] font-semibold text-[#1a1a1a] mb-0.5 flex items-center gap-1.5">
           <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
           Where are approvals slowing deals down?
         </h3>
-        <p className="text-[10px] text-[#9ca3af] mb-3">Average days to approval by stage — last 30 days</p>
-        <div className="bg-white border border-[#e5e7eb] rounded-lg overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <p className="text-[10px] text-[#999891] mb-3">Average days to approval by stage — last 30 days</p>
+        <div className="bg-white border border-[#e2e0d8] rounded-lg overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="overflow-x-auto">
           <table className="w-full text-[12px]">
             <thead>
-              <tr className="bg-[#f9fafb] border-b border-[#e5e7eb]">
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Approval Stage</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Avg. Days</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Deals</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">% Total</th>
-                <th className="px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Impact</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Trend</th>
+              <tr className="bg-[#f9fafb] border-b border-[#e2e0d8]">
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Approval Stage</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Avg. Days</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Deals</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">% Total</th>
+                <th className="px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Impact</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Trend</th>
               </tr>
             </thead>
             <tbody>
@@ -374,7 +374,7 @@ function BottlenecksTab() {
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-1.5">
                       {idx < 2 && <AlertTriangle className="w-3 h-3 text-red-500 flex-shrink-0" />}
-                      <span className="font-medium text-[#111827]">{s.stage}</span>
+                      <span className="font-medium text-[#1a1a1a]">{s.stage}</span>
                     </div>
                   </td>
                   <td className="text-center px-4 py-2.5">
@@ -382,11 +382,11 @@ function BottlenecksTab() {
                       {s.avgDays}d
                     </span>
                   </td>
-                  <td className="text-center px-4 py-2.5 text-[#374151] tabular-nums">{s.dealCount}</td>
-                  <td className="text-center px-4 py-2.5 text-[#9ca3af] tabular-nums">{s.pctOfTotal}%</td>
+                  <td className="text-center px-4 py-2.5 text-[#333333] tabular-nums">{s.dealCount}</td>
+                  <td className="text-center px-4 py-2.5 text-[#999891] tabular-nums">{s.pctOfTotal}%</td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-[#f3f4f6] rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-[#f0efe9] rounded-full overflow-hidden">
                         <div className="h-full rounded-full" style={{ width: `${Math.min((s.avgDays / 3.5) * 100, 100)}%`, backgroundColor: s.color }} />
                       </div>
                     </div>
@@ -408,23 +408,23 @@ function BottlenecksTab() {
       </div>
 
       <div>
-        <h3 className="text-[13px] font-semibold text-[#111827] mb-0.5 flex items-center gap-1.5">
+        <h3 className="text-[13px] font-semibold text-[#1a1a1a] mb-0.5 flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5 text-blue-500" />
           Who is a bottleneck?
         </h3>
-        <p className="text-[10px] text-[#9ca3af] mb-3">Individual approver performance — sorted by SLA compliance</p>
-        <div className="bg-white border border-[#e5e7eb] rounded-lg overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <p className="text-[10px] text-[#999891] mb-3">Individual approver performance — sorted by SLA compliance</p>
+        <div className="bg-white border border-[#e2e0d8] rounded-lg overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="overflow-x-auto">
           <table className="w-full text-[12px]">
             <thead>
-              <tr className="bg-[#f9fafb] border-b border-[#e5e7eb]">
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Approver</th>
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Group</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Avg. Time</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Done</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Pending</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Rejected</th>
-                <th className="px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">SLA</th>
+              <tr className="bg-[#f9fafb] border-b border-[#e2e0d8]">
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Approver</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Group</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Avg. Time</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Done</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Pending</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Rejected</th>
+                <th className="px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">SLA</th>
               </tr>
             </thead>
             <tbody>
@@ -435,16 +435,16 @@ function BottlenecksTab() {
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white ${a.sla < 60 ? 'bg-red-500' : a.sla < 80 ? 'bg-amber-500' : 'bg-emerald-500'}`}>
                         {a.avatar}
                       </div>
-                      <span className="font-medium text-[#111827]">{a.name}</span>
+                      <span className="font-medium text-[#1a1a1a]">{a.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-2.5 text-[#6b7280]">{a.group}</td>
+                  <td className="px-4 py-2.5 text-[#666666]">{a.group}</td>
                   <td className="text-center px-4 py-2.5">
                     <span className={`font-semibold tabular-nums ${parseFloat(a.avgTime) > 6 ? 'text-red-600' : parseFloat(a.avgTime) > 3 ? 'text-amber-600' : 'text-emerald-600'}`}>
                       {a.avgTime}
                     </span>
                   </td>
-                  <td className="text-center px-4 py-2.5 text-[#374151] tabular-nums">{a.approvals}</td>
+                  <td className="text-center px-4 py-2.5 text-[#333333] tabular-nums">{a.approvals}</td>
                   <td className="text-center px-4 py-2.5">
                     {a.pending > 5 ? (
                       <span className="inline-flex items-center gap-0.5 text-red-600 font-medium tabular-nums">
@@ -452,13 +452,13 @@ function BottlenecksTab() {
                         <AlertTriangle className="w-3 h-3" />
                       </span>
                     ) : (
-                      <span className="text-[#374151] tabular-nums">{a.pending}</span>
+                      <span className="text-[#333333] tabular-nums">{a.pending}</span>
                     )}
                   </td>
-                  <td className="text-center px-4 py-2.5 text-[#374151] tabular-nums">{a.rejections}</td>
+                  <td className="text-center px-4 py-2.5 text-[#333333] tabular-nums">{a.rejections}</td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-1.5">
-                      <div className="flex-1 h-1.5 bg-[#f3f4f6] rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-[#f0efe9] rounded-full overflow-hidden">
                         <div className="h-full rounded-full" style={{
                           width: `${a.sla}%`,
                           backgroundColor: a.sla >= 80 ? '#22c55e' : a.sla >= 60 ? '#f59e0b' : '#ef4444',
@@ -492,29 +492,29 @@ function RulesTab({ filteredRules }: { filteredRules: typeof RULE_TRIGGER_DATA }
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-[13px] font-semibold text-[#111827] mb-0.5 flex items-center gap-1.5">
+        <h3 className="text-[13px] font-semibold text-[#1a1a1a] mb-0.5 flex items-center gap-1.5">
           <Zap className="w-3.5 h-3.5 text-purple-500" />
           Which rules trigger most often?
         </h3>
-        <p className="text-[10px] text-[#9ca3af] mb-3">Rule trigger frequency — last 30 days · {filteredRules.length} rules</p>
-        <div className="bg-white border border-[#e5e7eb] rounded-lg overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <p className="text-[10px] text-[#999891] mb-3">Rule trigger frequency — last 30 days · {filteredRules.length} rules</p>
+        <div className="bg-white border border-[#e2e0d8] rounded-lg overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="overflow-x-auto">
           <table className="w-full text-[12px]">
             <thead>
-              <tr className="bg-[#f9fafb] border-b border-[#e5e7eb]">
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider w-[260px]">Rule</th>
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Category</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Count</th>
-                <th className="px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Frequency</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Avg. Time</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Rej. %</th>
+              <tr className="bg-[#f9fafb] border-b border-[#e2e0d8]">
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider w-[260px]">Rule</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Category</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Count</th>
+                <th className="px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Frequency</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Avg. Time</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Rej. %</th>
               </tr>
             </thead>
             <tbody>
               {filteredRules.map((r) => (
                 <tr key={r.rule} className="border-b border-[#f0f1f4] last:border-0 hover:bg-[#f9fafb] transition-colors">
                   <td className="px-4 py-2.5">
-                    <span className="font-medium text-[#111827]">{r.rule}</span>
+                    <span className="font-medium text-[#1a1a1a]">{r.rule}</span>
                   </td>
                   <td className="px-4 py-2.5">
                     <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${
@@ -525,13 +525,13 @@ function RulesTab({ filteredRules }: { filteredRules: typeof RULE_TRIGGER_DATA }
                       {r.category === 'pricing' ? 'Pricing' : r.category === 'terms' ? 'Terms' : 'Custom'}
                     </span>
                   </td>
-                  <td className="text-center px-4 py-2.5 font-semibold text-[#111827] tabular-nums">{r.count}</td>
+                  <td className="text-center px-4 py-2.5 font-semibold text-[#1a1a1a] tabular-nums">{r.count}</td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-1.5">
-                      <div className="flex-1 h-1.5 bg-[#f3f4f6] rounded-full overflow-hidden">
-                        <div className="h-full rounded-full bg-[#4262FF]" style={{ width: `${(r.count / maxCount) * 100}%` }} />
+                      <div className="flex-1 h-1.5 bg-[#f0efe9] rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-[#1a1a1a]" style={{ width: `${(r.count / maxCount) * 100}%` }} />
                       </div>
-                      <span className="text-[10px] text-[#9ca3af] w-6 text-right tabular-nums">{r.pct}%</span>
+                      <span className="text-[10px] text-[#999891] w-6 text-right tabular-nums">{r.pct}%</span>
                     </div>
                   </td>
                   <td className="text-center px-4 py-2.5">
@@ -559,16 +559,16 @@ function RulesTab({ filteredRules }: { filteredRules: typeof RULE_TRIGGER_DATA }
           { cat: 'Commercial Terms', count: 515, rules: 4, color: '#8b5cf6', pct: 49, topRule: 'Payment Terms', topCount: 234 },
           { cat: 'Custom', count: 205, rules: 3, color: '#f59e0b', pct: 19, topRule: 'Custom Product → L2', topCount: 156 },
         ].map(c => (
-          <div key={c.cat} className="bg-white border border-[#e5e7eb] rounded-lg p-3.5">
+          <div key={c.cat} className="bg-white border border-[#e2e0d8] rounded-lg p-3.5">
             <div className="flex items-center gap-1.5 mb-2">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.color }} />
-              <h4 className="text-[12px] font-semibold text-[#111827]">{c.cat}</h4>
+              <h4 className="text-[12px] font-semibold text-[#1a1a1a]">{c.cat}</h4>
             </div>
-            <div className="text-[20px] font-bold text-[#111827] tabular-nums">{c.count}</div>
-            <div className="text-[10px] text-[#9ca3af]">across {c.rules} rules ({c.pct}%)</div>
+            <div className="text-[20px] font-bold text-[#1a1a1a] tabular-nums">{c.count}</div>
+            <div className="text-[10px] text-[#999891]">across {c.rules} rules ({c.pct}%)</div>
             <div className="mt-2.5 pt-2.5 border-t border-[#f0f1f4]">
-              <div className="text-[10px] text-[#9ca3af]">Top rule:</div>
-              <div className="text-[11px] font-medium text-[#111827]">{c.topRule} <span className="text-[#4262FF] tabular-nums">({c.topCount})</span></div>
+              <div className="text-[10px] text-[#999891]">Top rule:</div>
+              <div className="text-[11px] font-medium text-[#1a1a1a]">{c.topRule} <span className="text-[#1a1a1a] tabular-nums">({c.topCount})</span></div>
             </div>
           </div>
         ))}
@@ -587,45 +587,45 @@ function ExecutiveTab({ kpi, timePeriod }: { kpi: typeof KPI_DATA['Last 30 Days'
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard label="VP of Sales Reviews" value={kpi.vpReviews} icon={UserCheck} color="#8b5cf6" subtitle={`${((kpi.vpReviews / totalDeals) * 100).toFixed(1)}% of deals`} />
         <KpiCard label="CFO Reviews" value={kpi.cfoReviews} icon={UserCheck} color="#dc2626" subtitle={`${((kpi.cfoReviews / totalDeals) * 100).toFixed(1)}% of deals`} />
-        <KpiCard label="Total Executive" value={execDeals} icon={Users} color="#4262FF" subtitle={`${execPct}% of deals`} />
+        <KpiCard label="Total Executive" value={execDeals} icon={Users} color="#1a1a1a" subtitle={`${execPct}% of deals`} />
         <KpiCard label="Exec Avg. Time" value="9.8h" icon={Timer} trend={5} color="#f59e0b" subtitle="Target: < 8h" />
       </div>
 
       <div>
-        <h3 className="text-[13px] font-semibold text-[#111827] mb-0.5 flex items-center gap-1.5">
+        <h3 className="text-[13px] font-semibold text-[#1a1a1a] mb-0.5 flex items-center gap-1.5">
           <UserCheck className="w-3.5 h-3.5 text-purple-500" />
           Executive review breakdown
         </h3>
-        <p className="text-[10px] text-[#9ca3af] mb-3">{timePeriod}</p>
-        <div className="bg-white border border-[#e5e7eb] rounded-lg overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <p className="text-[10px] text-[#999891] mb-3">{timePeriod}</p>
+        <div className="bg-white border border-[#e2e0d8] rounded-lg overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="overflow-x-auto">
           <table className="w-full text-[12px]">
             <thead>
-              <tr className="bg-[#f9fafb] border-b border-[#e5e7eb]">
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Level</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Deals</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">%</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Avg Size</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Avg Time</th>
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Top Trigger</th>
-                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">Rate</th>
+              <tr className="bg-[#f9fafb] border-b border-[#e2e0d8]">
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Level</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Deals</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">%</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Avg Size</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Avg Time</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Top Trigger</th>
+                <th className="text-center px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Rate</th>
               </tr>
             </thead>
             <tbody>
               {EXECUTIVE_REVIEWS.map(r => (
                 <tr key={r.level} className="border-b border-[#f0f1f4] last:border-0">
                   <td className="px-4 py-2.5">
-                    <span className="font-medium text-[#111827]">{r.level}</span>
+                    <span className="font-medium text-[#1a1a1a]">{r.level}</span>
                   </td>
-                  <td className="text-center px-4 py-2.5 font-semibold text-[#111827] tabular-nums">{r.deals}</td>
-                  <td className="text-center px-4 py-2.5 text-[#9ca3af] tabular-nums">{r.pctOfTotal}%</td>
-                  <td className="text-center px-4 py-2.5 text-[#374151] tabular-nums">{r.avgDealSize}</td>
+                  <td className="text-center px-4 py-2.5 font-semibold text-[#1a1a1a] tabular-nums">{r.deals}</td>
+                  <td className="text-center px-4 py-2.5 text-[#999891] tabular-nums">{r.pctOfTotal}%</td>
+                  <td className="text-center px-4 py-2.5 text-[#333333] tabular-nums">{r.avgDealSize}</td>
                   <td className="text-center px-4 py-2.5">
                     <span className={`font-medium tabular-nums ${parseFloat(r.avgTime) > 8 ? 'text-red-600' : 'text-amber-600'}`}>
                       {r.avgTime}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-[#6b7280]">{r.topTrigger}</td>
+                  <td className="px-4 py-2.5 text-[#666666]">{r.topTrigger}</td>
                   <td className="text-center px-4 py-2.5">
                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
                       r.approvalRate >= 85 ? 'bg-emerald-50 text-emerald-700' :
@@ -644,8 +644,8 @@ function ExecutiveTab({ kpi, timePeriod }: { kpi: typeof KPI_DATA['Last 30 Days'
       </div>
 
       {/* Stacked bar chart */}
-      <div className="bg-white border border-[#e5e7eb] rounded-lg p-4">
-        <h4 className="text-[12px] font-semibold text-[#111827] mb-3">Executive Review Volume by Week</h4>
+      <div className="bg-white border border-[#e2e0d8] rounded-lg p-4">
+        <h4 className="text-[12px] font-semibold text-[#1a1a1a] mb-3">Executive Review Volume by Week</h4>
         <div className="flex items-end gap-2.5 h-24 px-1">
           {[
             { week: 'Jan 6', vp: 11, cfo: 3 },
@@ -659,13 +659,13 @@ function ExecutiveTab({ kpi, timePeriod }: { kpi: typeof KPI_DATA['Last 30 Days'
             const maxHeight = 18;
             return (
               <div key={w.week} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-[10px] font-medium text-[#111827] tabular-nums">{total}</span>
+                <span className="text-[10px] font-medium text-[#1a1a1a] tabular-nums">{total}</span>
                 <div className="w-full flex flex-col" style={{ height: '70px' }}>
                   <div className="flex-1" />
                   <div className="w-full rounded-t-sm bg-red-500/70" style={{ height: `${(w.cfo / maxHeight) * 70}px` }} />
                   <div className="w-full bg-violet-500/70" style={{ height: `${(w.vp / maxHeight) * 70}px` }} />
                 </div>
-                <span className="text-[10px] text-[#9ca3af]">{w.week}</span>
+                <span className="text-[10px] text-[#999891]">{w.week}</span>
               </div>
             );
           })}
@@ -673,11 +673,11 @@ function ExecutiveTab({ kpi, timePeriod }: { kpi: typeof KPI_DATA['Last 30 Days'
         <div className="mt-2.5 pt-2.5 border-t border-[#f0f1f4] flex items-center gap-4 text-[10px]">
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-sm bg-violet-500/70" />
-            <span className="text-[#9ca3af]">VP of Sales</span>
+            <span className="text-[#999891]">VP of Sales</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-sm bg-red-500/70" />
-            <span className="text-[#9ca3af]">CFO</span>
+            <span className="text-[#999891]">CFO</span>
           </div>
         </div>
       </div>
@@ -689,19 +689,19 @@ function ThresholdsTab() {
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-[13px] font-semibold text-[#111827] mb-0.5 flex items-center gap-1.5">
+        <h3 className="text-[13px] font-semibold text-[#1a1a1a] mb-0.5 flex items-center gap-1.5">
           <Target className="w-3.5 h-3.5 text-blue-500" />
           Threshold impact analysis
           </h3>
-        <p className="text-[10px] text-[#9ca3af] mb-3">Simulated impact of adjusting approval thresholds — last 30 days</p>
+        <p className="text-[10px] text-[#999891] mb-3">Simulated impact of adjusting approval thresholds — last 30 days</p>
 
         <div className="space-y-3">
           {THRESHOLD_IMPACT.map((t) => (
-            <div key={t.threshold} className="bg-white border border-[#e5e7eb] rounded-lg p-4">
+            <div key={t.threshold} className="bg-white border border-[#e2e0d8] rounded-lg p-4">
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h4 className="text-[12px] font-semibold text-[#111827]">{t.threshold}</h4>
-                  <div className="text-[10px] text-[#9ca3af] mt-0.5">Current: <span className="font-medium text-[#374151] tabular-nums">{t.currentTriggers}</span> triggers · Avg impact: {t.avgDealImpact}</div>
+                  <h4 className="text-[12px] font-semibold text-[#1a1a1a]">{t.threshold}</h4>
+                  <div className="text-[10px] text-[#999891] mt-0.5">Current: <span className="font-medium text-[#333333] tabular-nums">{t.currentTriggers}</span> triggers · Avg impact: {t.avgDealImpact}</div>
                 </div>
                 <div className={`text-[10px] px-2 py-0.5 rounded-md ${
                   t.recommendation.includes('Consider') ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
@@ -712,7 +712,7 @@ function ThresholdsTab() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-[#f9fafb] rounded-lg p-3 border border-[#f0f1f4]">
-                  <div className="text-[10px] text-[#9ca3af] mb-1">If lowered to {t.ifLowered.label}</div>
+                  <div className="text-[10px] text-[#999891] mb-1">If lowered to {t.ifLowered.label}</div>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-[16px] font-bold text-amber-600 tabular-nums">{t.ifLowered.triggers}</span>
                     <span className="text-[10px] font-medium text-red-600">{t.ifLowered.delta}</span>
@@ -722,19 +722,19 @@ function ThresholdsTab() {
                   </div>
                 </div>
 
-                <div className="bg-[#4262FF]/[0.04] rounded-lg p-3 border-2 border-[#4262FF]/20">
-                  <div className="text-[10px] text-[#4262FF] font-medium mb-1">Current</div>
+                <div className="bg-[#1a1a1a]/[0.04] rounded-lg p-3 border-2 border-[#1a1a1a]/20">
+                  <div className="text-[10px] text-[#1a1a1a] font-medium mb-1">Current</div>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-[16px] font-bold text-[#111827] tabular-nums">{t.currentTriggers}</span>
-                    <span className="text-[10px] text-[#9ca3af]">triggers</span>
+                    <span className="text-[16px] font-bold text-[#1a1a1a] tabular-nums">{t.currentTriggers}</span>
+                    <span className="text-[10px] text-[#999891]">triggers</span>
                   </div>
                   <div className="mt-1.5 h-1 bg-[#e5e7eb] rounded-full overflow-hidden">
-                    <div className="h-full rounded-full bg-[#4262FF]" style={{ width: `${Math.min((t.currentTriggers / 250) * 100, 100)}%` }} />
+                    <div className="h-full rounded-full bg-[#1a1a1a]" style={{ width: `${Math.min((t.currentTriggers / 250) * 100, 100)}%` }} />
                   </div>
                 </div>
 
                 <div className="bg-[#f9fafb] rounded-lg p-3 border border-[#f0f1f4]">
-                  <div className="text-[10px] text-[#9ca3af] mb-1">If raised to {t.ifRaised.label}</div>
+                  <div className="text-[10px] text-[#999891] mb-1">If raised to {t.ifRaised.label}</div>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-[16px] font-bold text-emerald-600 tabular-nums">{t.ifRaised.triggers}</span>
                     <span className="text-[10px] font-medium text-emerald-600">{t.ifRaised.delta}</span>
@@ -750,35 +750,35 @@ function ThresholdsTab() {
       </div>
 
       {/* Summary */}
-      <div className="bg-[#4262FF]/[0.03] border border-[#4262FF]/15 rounded-lg p-4">
-        <h4 className="text-[12px] font-semibold text-[#111827] mb-2 flex items-center gap-1.5">
+      <div className="bg-[#1a1a1a]/[0.03] border border-[#1a1a1a]/15 rounded-lg p-4">
+        <h4 className="text-[12px] font-semibold text-[#1a1a1a] mb-2 flex items-center gap-1.5">
           <Info className="w-3.5 h-3.5 text-blue-500" />
           Threshold Optimization Summary
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
           <div>
-            <div className="font-medium text-[#111827] mb-1">Recommended changes:</div>
-            <ul className="space-y-1 text-[#6b7280]">
+            <div className="font-medium text-[#1a1a1a] mb-1">Recommended changes:</div>
+            <ul className="space-y-1 text-[#666666]">
               <li className="flex items-center gap-1.5">
                 <ArrowUpRight className="w-3 h-3 text-emerald-500 flex-shrink-0" />
-                <span>Raise <span className="font-medium text-[#111827]">ACV threshold</span> to $300K — saves ~41 VP reviews/mo</span>
+                <span>Raise <span className="font-medium text-[#1a1a1a]">ACV threshold</span> to $300K — saves ~41 VP reviews/mo</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <ArrowDownRight className="w-3 h-3 text-amber-500 flex-shrink-0" />
-                <span>Lower <span className="font-medium text-[#111827]">Multi-Year threshold</span> to 2yr — catches high-rejection deals</span>
+                <span>Lower <span className="font-medium text-[#1a1a1a]">Multi-Year threshold</span> to 2yr — catches high-rejection deals</span>
               </li>
             </ul>
           </div>
           <div>
-            <div className="font-medium text-[#111827] mb-1">Projected impact:</div>
-            <ul className="space-y-1 text-[#6b7280]">
+            <div className="font-medium text-[#1a1a1a] mb-1">Projected impact:</div>
+            <ul className="space-y-1 text-[#666666]">
               <li className="flex items-center gap-1.5">
                 <Clock className="w-3 h-3 text-blue-500 flex-shrink-0" />
-                <span>Est. <span className="font-medium text-[#111827]">-0.6h</span> avg approval time reduction</span>
+                <span>Est. <span className="font-medium text-[#1a1a1a]">-0.6h</span> avg approval time reduction</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0" />
-                <span>Est. <span className="font-medium text-[#111827]">-38 exec reviews</span>/mo with threshold raise</span>
+                <span>Est. <span className="font-medium text-[#1a1a1a]">-38 exec reviews</span>/mo with threshold raise</span>
               </li>
             </ul>
           </div>

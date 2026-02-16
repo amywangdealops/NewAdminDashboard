@@ -113,7 +113,7 @@ export function CreateGroupModal({ onClose, onSave, editingGroup }: CreateGroupM
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-[#e1e4e8] px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 id="modal-title" className="text-xl font-semibold text-[#050038]">
+            <h2 id="modal-title" className="text-xl font-semibold text-[#1a1a1a]">
               {isEditMode ? 'Edit Group' : 'Create Approval Group'}
             </h2>
             <p className="text-sm text-[#6c757d] mt-0.5">
@@ -134,7 +134,7 @@ export function CreateGroupModal({ onClose, onSave, editingGroup }: CreateGroupM
         <div className="p-6 space-y-6">
           {/* Group Name */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-2">
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-2">
               Group Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -147,7 +147,7 @@ export function CreateGroupModal({ onClose, onSave, editingGroup }: CreateGroupM
                 }
               }}
               placeholder="e.g., Deal Desk, Finance Team"
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm transition-all ${
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm transition-all ${
                 errors.name ? 'border-red-500' : 'border-[#e1e4e8]'
               }`}
               aria-label="Group name"
@@ -163,7 +163,7 @@ export function CreateGroupModal({ onClose, onSave, editingGroup }: CreateGroupM
 
           {/* Members */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-2">
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-2">
               Members <span className="text-red-500">*</span>
             </label>
             <div className="flex gap-2 mb-2">
@@ -174,7 +174,7 @@ export function CreateGroupModal({ onClose, onSave, editingGroup }: CreateGroupM
                 onKeyPress={handleKeyPress}
                 onPaste={handlePasteMembers}
                 placeholder="Enter member name and press Enter, or paste multiple names (comma/newline separated)"
-                className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm transition-all ${
+                className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm transition-all ${
                   errors.members ? 'border-red-500' : 'border-[#e1e4e8]'
                 }`}
                 aria-label="Member name input"
@@ -183,7 +183,7 @@ export function CreateGroupModal({ onClose, onSave, editingGroup }: CreateGroupM
               <button
                 onClick={handleAddMember}
                 disabled={!memberInput.trim()}
-                className="h-9 px-4 bg-[#4262FF] text-white rounded-md hover:bg-[#3451E6] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 text-sm font-medium transition-colors"
+                className="h-9 px-4 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 text-sm font-medium transition-colors"
                 aria-label="Add member"
               >
                 <Plus className="w-4 h-4" />
@@ -203,14 +203,14 @@ export function CreateGroupModal({ onClose, onSave, editingGroup }: CreateGroupM
                 {members.map((member, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-[#f0f4ff] border border-[#4262FF]/20 rounded-md text-sm text-[#050038]"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-[#f5f4f0] border border-[#1a1a1a]/20 rounded-md text-sm text-[#1a1a1a]"
                   >
                     <span>{member}</span>
                     <button
                       onClick={() => handleRemoveMember(member)}
-                      className="hover:bg-[#4262FF]/10 rounded p-0.5 transition-colors"
+                      className="hover:bg-[#1a1a1a]/10 rounded p-0.5 transition-colors"
                     >
-                      <XIcon className="w-3 h-3 text-[#4262FF]" />
+                      <XIcon className="w-3 h-3 text-[#1a1a1a]" />
                     </button>
                   </div>
                 ))}
@@ -223,7 +223,7 @@ export function CreateGroupModal({ onClose, onSave, editingGroup }: CreateGroupM
 
           {/* Required Approvals */}
           <div>
-            <label className="block text-sm font-medium text-[#050038] mb-2">
+            <label className="block text-sm font-medium text-[#1a1a1a] mb-2">
               Required Approvals <span className="text-red-500">*</span>
             </label>
               <input
@@ -238,7 +238,7 @@ export function CreateGroupModal({ onClose, onSave, editingGroup }: CreateGroupM
                     setErrors({ ...errors, approvals: undefined });
                   }
                 }}
-                className={`w-32 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] text-sm transition-all ${
+                className={`w-32 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm transition-all ${
                   errors.approvals ? 'border-red-500' : 'border-[#e1e4e8]'
                 }`}
                 aria-label="Required approvals"
@@ -255,9 +255,9 @@ export function CreateGroupModal({ onClose, onSave, editingGroup }: CreateGroupM
           </div>
 
           {/* Info Box */}
-          <div className="p-4 bg-[#f0f4ff] border border-[#4262FF]/20 rounded-lg">
-            <div className="text-xs text-[#4262FF] font-medium mb-2">INFO</div>
-            <p className="text-sm text-[#050038]">
+          <div className="p-4 bg-[#f5f4f0] border border-[#1a1a1a]/20 rounded-lg">
+            <div className="text-xs text-[#1a1a1a] font-medium mb-2">INFO</div>
+            <p className="text-sm text-[#1a1a1a]">
               This group will be available for selection when creating approval triggers. 
               {members.length > 0 && requiredApprovals > 0 && (
                 <span className="block mt-1">
@@ -272,14 +272,14 @@ export function CreateGroupModal({ onClose, onSave, editingGroup }: CreateGroupM
         <div className="sticky bottom-0 bg-white border-t border-[#e1e4e8] px-6 py-4 flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="h-9 px-4 border border-[#e1e4e8] rounded-md hover:bg-[#f8f9fa] text-[#050038] text-sm font-medium transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20"
+            className="h-9 px-4 border border-[#e1e4e8] rounded-md hover:bg-[#f8f9fa] text-[#1a1a1a] text-sm font-medium transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
             aria-label="Cancel"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="h-9 px-4 bg-[#4262FF] text-white rounded-md hover:bg-[#3451E6] inline-flex items-center gap-2 text-sm font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:ring-offset-2"
+            className="h-9 px-4 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] inline-flex items-center gap-2 text-sm font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:ring-offset-2"
             aria-label={isEditMode ? 'Save changes' : 'Create group'}
           >
             <Check className="w-4 h-4" />

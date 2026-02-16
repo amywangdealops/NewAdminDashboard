@@ -226,29 +226,29 @@ export function ApprovalTriggers() {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="border-b border-[#e5e7eb] bg-white px-6 py-3.5">
+      <header className="border-b border-[#e2e0d8] bg-white px-6 py-3.5">
         <div className="flex items-center justify-between gap-4 mb-3">
           <div className="min-w-0">
-            <h1 className="text-[15px] font-semibold text-[#111827] tracking-tight">Approval Triggers</h1>
-            <p className="text-[#9ca3af] text-[12px] mt-0.5">
+            <h1 className="text-[15px] font-semibold text-[#1a1a1a] tracking-tight">Approval Triggers</h1>
+            <p className="text-[#999891] text-[12px] mt-0.5">
               Rules that trigger internal approval before a deal can close
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#999891]" />
               <input
                 type="text"
                 placeholder="Search triggers..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-48 h-8 pl-8 pr-3 bg-[#f5f6f8] border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 focus:border-[#4262FF] focus:bg-white text-[12px] transition-all placeholder:text-[#9ca3af]"
+                className="w-48 h-8 pl-8 pr-3 bg-[#f5f6f8] border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] focus:bg-white text-[12px] transition-all placeholder:text-[#999891]"
                 aria-label="Search triggers"
               />
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="h-8 px-3 bg-[#4262FF] text-white rounded-md hover:bg-[#3451E6] inline-flex items-center gap-1.5 text-[12px] font-medium transition-all shadow-sm whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#4262FF]/20 active:scale-[0.98]"
+              className="h-8 px-3 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] inline-flex items-center gap-1.5 text-[12px] font-medium transition-all shadow-sm whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 active:scale-[0.98]"
               aria-label="Add new trigger"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -265,8 +265,8 @@ export function ApprovalTriggers() {
               onClick={() => setActiveCategory(cat)}
               className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-150 ${
                 activeCategory === cat
-                  ? 'bg-[#4262FF] text-white shadow-sm'
-                  : 'bg-[#f3f4f6] text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#374151]'
+                  ? 'bg-[#1a1a1a] text-white shadow-sm'
+                  : 'bg-[#f0efe9] text-[#666666] hover:bg-[#e2e0d8] hover:text-[#333333]'
               }`}
             >
               {cat}
@@ -278,13 +278,13 @@ export function ApprovalTriggers() {
       <div className="flex-1 overflow-auto p-6">
         {filteredTriggers.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-12 h-12 rounded-xl bg-[#f3f4f6] flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 rounded-xl bg-[#f0efe9] flex items-center justify-center mx-auto mb-3">
               <Shield className="w-6 h-6 text-[#d1d5db]" />
             </div>
-            <h3 className="text-[14px] font-semibold text-[#111827] mb-1">
+            <h3 className="text-[14px] font-semibold text-[#1a1a1a] mb-1">
               {searchQuery ? `No triggers found matching "${searchQuery}"` : 'No triggers found'}
             </h3>
-            <p className="text-[12px] text-[#9ca3af]">
+            <p className="text-[12px] text-[#999891]">
               {searchQuery ? 'Try a different search term' : 'Create your first trigger to get started'}
             </p>
           </div>
@@ -295,16 +295,16 @@ export function ApprovalTriggers() {
               return (
                 <div
                   key={trigger.id}
-                  className="bg-white rounded-lg border border-[#e5e7eb] p-4 hover:shadow-[0_4px_16px_rgba(66,98,255,0.08)] hover:border-[#4262FF]/25 transition-all duration-200 flex flex-col"
+                  className="bg-white rounded-lg border border-[#e2e0d8] p-4 hover:shadow-[0_4px_16px_rgba(66,98,255,0.08)] hover:border-[#1a1a1a]/25 transition-all duration-200 flex flex-col"
                 >
                   {/* Top row: icon + name + status */}
                   <div className="flex items-start gap-2.5 mb-2">
-                    <div className="w-7 h-7 rounded-md bg-[#4262FF]/[0.08] flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <trigger.icon className="w-3.5 h-3.5 text-[#4262FF]" />
+                    <div className="w-7 h-7 rounded-md bg-[#1a1a1a]/[0.08] flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <trigger.icon className="w-3.5 h-3.5 text-[#1a1a1a]" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold text-[#111827] text-[13px] leading-snug">{trigger.name}</h3>
+                        <h3 className="font-semibold text-[#1a1a1a] text-[13px] leading-snug">{trigger.name}</h3>
                         <span className={`flex-shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
                           trigger.status === 'active'
                             ? 'bg-emerald-50 text-emerald-700'
@@ -314,7 +314,7 @@ export function ApprovalTriggers() {
                           {trigger.status === 'active' ? 'Active' : 'Paused'}
                         </span>
                       </div>
-                      <p className="text-[12px] text-[#6b7280] leading-relaxed mt-0.5 line-clamp-2">{renderSentence(trigger)}</p>
+                      <p className="text-[12px] text-[#666666] leading-relaxed mt-0.5 line-clamp-2">{renderSentence(trigger)}</p>
                     </div>
                   </div>
 
@@ -329,13 +329,13 @@ export function ApprovalTriggers() {
                       {CATEGORY_LABELS[trigger.category]}
                     </span>
                     {trigger.fromTemplate && (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#4262FF]/[0.06] text-[#4262FF] text-[10px] font-medium">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#1a1a1a]/[0.06] text-[#1a1a1a] text-[10px] font-medium">
                         <Layers className="w-2.5 h-2.5" />
                         Template
                       </span>
                     )}
                     {trigger.createdAt && (
-                      <span className="text-[10px] text-[#9ca3af]">
+                      <span className="text-[10px] text-[#999891]">
                         {new Date(trigger.createdAt).toLocaleDateString()}
                       </span>
                     )}
@@ -346,13 +346,13 @@ export function ApprovalTriggers() {
 
                   {/* Footer */}
                   <div className="flex items-center justify-between pt-3 border-t border-[#f0f1f4] ml-[38px]">
-                    <div className="flex items-center gap-3 text-[11px] text-[#9ca3af]">
+                    <div className="flex items-center gap-3 text-[11px] text-[#999891]">
                       <span className="tabular-nums">{trigger.impact.deals} deals</span>
                       <span className="tabular-nums">avg {trigger.impact.avgTime}</span>
                     </div>
                     <button
                       onClick={() => handleTriggerClick(trigger)}
-                      className="px-2.5 py-1.5 border border-[#e5e7eb] rounded-md hover:bg-[#f9fafb] hover:border-[#4262FF]/25 flex items-center gap-1.5 text-[#374151] text-[11px] font-medium transition-all duration-150 active:scale-[0.98]"
+                      className="px-2.5 py-1.5 border border-[#e2e0d8] rounded-md hover:bg-[#f9fafb] hover:border-[#1a1a1a]/25 flex items-center gap-1.5 text-[#333333] text-[11px] font-medium transition-all duration-150 active:scale-[0.98]"
                       aria-label={`View trigger: ${trigger.name}`}
                     >
                       <Eye className="w-3 h-3" />
