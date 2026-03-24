@@ -1,6 +1,6 @@
-import { Search, Users, ArrowUpDown, Download, X } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
-import { type User, type UserRole, type UserPermission, listUsers, updateUser, getManagerOptions, ALL_ROLES, ALL_PERMISSIONS } from './userStore';
+import { Search, Users, ArrowUpDown, Download, Upload, X } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { type User, type UserRole, type UserPermission, listUsers, updateUser, bulkAddUsers, getManagerOptions, ALL_ROLES, ALL_PERMISSIONS } from './userStore';
 
 type SortField = 'name' | 'role';
 type SortDir = 'asc' | 'desc';
@@ -64,6 +64,86 @@ export function UserList() {
     });
     return result;
   }, [users, searchQuery, roleFilter, permissionFilter, sortField, sortDir]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const text = evt.target?.result as string;
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) return;
+
+      const parseCsvLine = (line: string): string[] => {
+        const cells: string[] = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (inQuotes) {
+            if (ch === '"' && line[i + 1] === '"') {
+              current += '"';
+              i++;
+            } else if (ch === '"') {
+              inQuotes = false;
+            } else {
+              current += ch;
+            }
+          } else if (ch === '"') {
+            inQuotes = true;
+          } else if (ch === ',') {
+            cells.push(current.trim());
+            current = '';
+          } else {
+            current += ch;
+          }
+        }
+        cells.push(current.trim());
+        return cells;
+      };
+
+      const header = parseCsvLine(lines[0]).map(h => h.toLowerCase());
+      const nameIdx = header.findIndex(h => h === 'name');
+      const roleIdx = header.findIndex(h => h === 'role');
+      const managerIdx = header.findIndex(h => h === 'manager');
+      const slackIdx = header.findIndex(h => h.includes('slack'));
+      const permIdx = header.findIndex(h => h.includes('permission'));
+
+      if (nameIdx === -1 || slackIdx === -1) return;
+
+      const validRoles = new Set<string>(ALL_ROLES);
+      const validPerms = new Set<string>(ALL_PERMISSIONS);
+
+      const incoming: Omit<User, 'id'>[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cells = parseCsvLine(lines[i]);
+        const name = cells[nameIdx]?.trim();
+        if (!name) continue;
+
+        const rawRole = roleIdx >= 0 ? cells[roleIdx]?.trim() : '';
+        const role: UserRole = validRoles.has(rawRole) ? (rawRole as UserRole) : 'User';
+
+        const rawManager = managerIdx >= 0 ? cells[managerIdx]?.trim() : '';
+        const manager = rawManager && rawManager !== '-' ? rawManager : null;
+
+        const slackId = cells[slackIdx]?.trim() || '';
+
+        const rawPerm = permIdx >= 0 ? cells[permIdx]?.trim() : '';
+        const permission: UserPermission = validPerms.has(rawPerm) ? (rawPerm as UserPermission) : 'View Only';
+
+        incoming.push({ name, role, manager, slackId, permission });
+      }
+
+      if (incoming.length > 0) {
+        const updated = bulkAddUsers(incoming);
+        setUsers(updated);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   const roleOrder: Record<UserRole, number> = { Admin: 0, 'Dealops Internal Staff': 1, User: 2 };
 
@@ -147,6 +227,20 @@ export function UserList() {
               </button>
             )}
             <div className="w-px h-5 bg-[#e2e0d8]" />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={handleCsvUpload}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 h-8 px-3 text-[12px] font-medium text-[#1a1a1a] bg-white border border-[#e2e0d8] rounded-md hover:bg-[#f5f4f0] transition-colors"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              Upload CSV
+            </button>
             <button
               onClick={downloadCsv}
               className="inline-flex items-center gap-1.5 h-8 px-3 text-[12px] font-medium text-white bg-[#1a1a1a] border border-[#1a1a1a] rounded-md hover:bg-[#333333] transition-colors"

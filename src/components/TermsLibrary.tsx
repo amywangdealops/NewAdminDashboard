@@ -1,5 +1,6 @@
-import { Plus, Search, Filter, FileText, Copy, Trash2, ChevronUp, ChevronDown, X, GripVertical } from 'lucide-react';
+import { Plus, Search, FileText, Copy, Trash2, ChevronUp, ChevronDown, X, GripVertical } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -30,12 +31,11 @@ interface TermFilters {
 
 const EMPTY_FILTERS: TermFilters = { status: '', category: '', inputType: '' };
 
-type SortField = 'name' | 'segments' | 'category' | 'inputType';
+type SortField = 'segments';
 type SortDir = 'asc' | 'desc';
 
 export function TermsLibrary() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<TermFilters>(EMPTY_FILTERS);
   const [terms, setTerms] = useState<Term[]>([]);
   const [drawer, setDrawer] = useState<DrawerState>({ type: 'closed' });
@@ -81,7 +81,6 @@ export function TermsLibrary() {
   };
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
-  const clearFilters = () => setFilters(EMPTY_FILTERS);
   const hasSearch = searchQuery.trim().length > 0;
   const hasFilters = activeFilterCount > 0;
   const hasSortOverride = sortField !== null;
@@ -144,17 +143,11 @@ export function TermsLibrary() {
     if (!sortField) return 0;
     const dir = sortDir === 'asc' ? 1 : -1;
     switch (sortField) {
-      case 'name':
-        return a.name.localeCompare(b.name) * dir;
       case 'segments': {
         const aS = a.segments.length === 0 ? 'All segments' : a.segments.join(', ');
         const bS = b.segments.length === 0 ? 'All segments' : b.segments.join(', ');
         return aS.localeCompare(bS) * dir;
       }
-      case 'category':
-        return a.category.localeCompare(b.category) * dir;
-      case 'inputType':
-        return a.inputType.localeCompare(b.inputType) * dir;
       default:
         return 0;
     }
@@ -188,22 +181,6 @@ export function TermsLibrary() {
                 aria-label="Search terms"
               />
             </div>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`h-8 px-2.5 border rounded-md hover:bg-[#f9fafb] inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 ${
-                activeFilterCount > 0
-                  ? 'border-[#1a1a1a] bg-[#1a1a1a]/5 text-[#1a1a1a]'
-                  : 'border-[#e2e0d8] text-[#333333]'
-              }`}
-              aria-label="Filter terms"
-              aria-expanded={showFilters}
-            >
-              <Filter className={`w-3.5 h-3.5 ${activeFilterCount > 0 ? 'text-[#1a1a1a]' : 'text-[#999891]'}`} />
-              Filters
-              {activeFilterCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-[#1a1a1a] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>
-              )}
-            </button>
             <AddTermSplitButton
               onNewBlank={handleAddTerm}
               onCloneFrom={handleDuplicateTerm}
@@ -212,41 +189,6 @@ export function TermsLibrary() {
           </div>
         </div>
       </header>
-
-      {/* Filter Bar */}
-      {showFilters && (
-        <div className="border-b border-[#e2e0d8] bg-[#f9fafb] px-6 py-2.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            <FilterSelect
-              label="Status"
-              value={filters.status}
-              options={['On', 'Off']}
-              onChange={(v) => setFilters(prev => ({ ...prev, status: v }))}
-            />
-            <FilterSelect
-              label="Category"
-              value={filters.category}
-              options={['Core Terms', 'Custom Terms']}
-              onChange={(v) => setFilters(prev => ({ ...prev, category: v }))}
-            />
-            <FilterSelect
-              label="Input Type"
-              value={filters.inputType}
-              options={['Date', 'Select', 'Number', 'Text', 'Select With Other']}
-              onChange={(v) => setFilters(prev => ({ ...prev, inputType: v }))}
-            />
-            {activeFilterCount > 0 && (
-              <button
-                onClick={clearFilters}
-                className="h-7 px-2 text-[11px] text-[#999891] hover:text-[#333333] inline-flex items-center gap-1 transition-colors"
-              >
-                <X className="w-3 h-3" />
-                Clear all
-              </button>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Terms Table */}
       <div className="flex-1 overflow-auto p-6">
@@ -258,11 +200,8 @@ export function TermsLibrary() {
                   <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider w-[100px]">
                     Order
                   </th>
-                  <th
-                    className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider cursor-pointer select-none group"
-                    onClick={() => handleSort('name')}
-                  >
-                    Term Name <SortIcon field="name" />
+                  <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">
+                    Term Name
                   </th>
                   <th
                     className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider cursor-pointer select-none group"
@@ -270,24 +209,27 @@ export function TermsLibrary() {
                   >
                     Segments <SortIcon field="segments" />
                   </th>
-                  <th
-                    className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider cursor-pointer select-none group"
-                    onClick={() => handleSort('category')}
-                  >
-                    Category <SortIcon field="category" />
-                  </th>
-                  <th
-                    className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider cursor-pointer select-none group"
-                    onClick={() => handleSort('inputType')}
-                  >
-                    Input Type <SortIcon field="inputType" />
-                  </th>
+                  <ColumnFilter
+                    label="Category"
+                    value={filters.category}
+                    options={['Core Terms', 'Custom Terms']}
+                    onChange={(v) => setFilters(prev => ({ ...prev, category: v }))}
+                  />
+                  <ColumnFilter
+                    label="Input Type"
+                    value={filters.inputType}
+                    options={['Date', 'Select', 'Number', 'Text', 'Select With Other']}
+                    onChange={(v) => setFilters(prev => ({ ...prev, inputType: v }))}
+                  />
                   <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">
                     Options
                   </th>
-                  <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">
-                    Status
-                  </th>
+                  <ColumnFilter
+                    label="Status"
+                    value={filters.status}
+                    options={['On', 'Off']}
+                    onChange={(v) => setFilters(prev => ({ ...prev, status: v }))}
+                  />
                   <th className="px-3 py-2.5 w-20"></th>
                 </tr>
               </thead>
@@ -663,31 +605,92 @@ function AddTermSplitButton({ onNewBlank, onCloneFrom, terms }: {
   );
 }
 
-// ─── Reusable Filter Select ─────────────────────────────
+// ─── Column Header Filter (Excel-style) ─────────────────
 
-function FilterSelect({ label, value, options, onChange }: {
+function ColumnFilter({ label, value, options, onChange }: {
   label: string;
   value: string;
   options: string[];
   onChange: (value: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        btnRef.current && !btnRef.current.contains(e.target as Node) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node)
+      ) setOpen(false);
+    };
+    const scrollHandler = () => setOpen(false);
+    document.addEventListener('mousedown', handler);
+    window.addEventListener('scroll', scrollHandler, true);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      window.removeEventListener('scroll', scrollHandler, true);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 2, left: rect.left });
+    }
+  }, [open]);
+
   return (
-    <div className="relative inline-flex items-center">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`h-7 pl-2 pr-6 border rounded-md text-[11px] font-medium transition-colors appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 ${
-          value
-            ? 'bg-[#1a1a1a] text-white border-[#1a1a1a]'
-            : 'bg-white text-[#666666] border-[#e2e0d8] hover:border-[#1a1a1a]/30'
+    <th className="text-left px-4 py-2.5">
+      <button
+        ref={btnRef}
+        onClick={() => setOpen(!open)}
+        className={`inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+          value ? 'text-[#1a1a1a]' : 'text-[#666666] hover:text-[#333]'
         }`}
       >
-        <option value="">{label}</option>
-        {options.map(opt => (
-          <option key={opt} value={opt}>{opt}</option>
-        ))}
-      </select>
-      <svg className={`w-3 h-3 absolute right-1.5 pointer-events-none ${value ? 'text-white' : 'text-[#999891]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-    </div>
+        {value || label}
+        {value ? (
+          <X
+            className="w-3 h-3 text-[#999891] hover:text-red-500"
+            onClick={(e) => { e.stopPropagation(); onChange(''); }}
+          />
+        ) : (
+          <ChevronDown className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
+        )}
+      </button>
+      {open && createPortal(
+        <div
+          ref={dropdownRef}
+          className="fixed z-[9999] bg-white border border-[#e2e0d8] rounded-md shadow-lg min-w-[120px] py-1"
+          style={{ top: pos.top, left: pos.left }}
+        >
+          {value && (
+            <button
+              onClick={() => { onChange(''); setOpen(false); }}
+              className="w-full text-left px-3 py-1.5 text-[11px] text-[#999891] hover:bg-[#f9fafb] transition-colors"
+            >
+              All
+            </button>
+          )}
+          {options.map(opt => (
+            <button
+              key={opt}
+              onClick={() => { onChange(opt); setOpen(false); }}
+              className={`w-full text-left px-3 py-1.5 text-[11px] transition-colors ${
+                value === opt
+                  ? 'bg-[#1a1a1a]/5 text-[#1a1a1a] font-semibold'
+                  : 'text-[#333] hover:bg-[#f9fafb]'
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+    </th>
   );
 }

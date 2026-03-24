@@ -1,13 +1,13 @@
 import {
   Layers, Copy, Search, Plus, Filter, X, ChevronDown,
-  ArrowRight, LayoutGrid, Trash2, Users, Target, Zap,
+  ArrowRight, LayoutGrid, Trash2, Users, Target, Zap, Pencil,
   AlertTriangle, Info, Shield, ListFilter,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { CreateTriggerModal } from './CreateTriggerModal';
-import { getAllTriggers, matchTriggersByConditions, saveTrigger, type MatchedTrigger } from './triggerStore';
+import { getAllTriggers, matchTriggersByConditions, saveTrigger, updateConditionText, updateApproverName, updateScopeName, type MatchedTrigger } from './triggerStore';
 
 // ---------------------------------------------------------------------------
 // Data types
@@ -214,19 +214,24 @@ const CATEGORIES: TemplateCategory[] = [
 // Palette data for builder
 // ---------------------------------------------------------------------------
 
-type PaletteCondition = { field: string; operator: string; value: string };
+type PaletteCondition = { id: string; field: string; operator: string; value: string };
+type PaletteApprover = { id: string; name: string };
+type ScopeItem = { id: string; name: string };
+
+let _nextBlockId = 200;
+function nextBlockId(prefix: string) { return `${prefix}_${_nextBlockId++}`; }
 
 const DEFAULT_CONDITIONS: PaletteCondition[] = [
-  { field: 'Billing Frequency', operator: 'is not', value: 'Annual Upfront' },
-  { field: 'Billing Frequency', operator: 'is one of', value: 'Quarterly, Other' },
-  { field: 'Billing Frequency', operator: 'equals', value: 'Other' },
-  { field: 'Payment Terms', operator: 'is not', value: 'Net 30' },
-  { field: 'Price Protection', operator: 'equals', value: 'Enabled' },
-  { field: 'Price Lock', operator: 'equals', value: 'Enabled' },
-  { field: 'Product Type', operator: 'equals', value: 'Custom Product' },
-  { field: 'Product', operator: 'includes', value: 'API' },
-  { field: 'Subscription Term', operator: 'outside', value: '12–24 months' },
-  { field: 'Discount', operator: '>', value: '20%' },
+  { id: 'cond_1', field: 'Billing Frequency', operator: 'is not', value: 'Annual Upfront' },
+  { id: 'cond_2', field: 'Billing Frequency', operator: 'is one of', value: 'Quarterly, Other' },
+  { id: 'cond_3', field: 'Billing Frequency', operator: 'equals', value: 'Other' },
+  { id: 'cond_4', field: 'Payment Terms', operator: 'is not', value: 'Net 30' },
+  { id: 'cond_5', field: 'Price Protection', operator: 'equals', value: 'Enabled' },
+  { id: 'cond_6', field: 'Price Lock', operator: 'equals', value: 'Enabled' },
+  { id: 'cond_7', field: 'Product Type', operator: 'equals', value: 'Custom Product' },
+  { id: 'cond_8', field: 'Product', operator: 'includes', value: 'API' },
+  { id: 'cond_9', field: 'Subscription Term', operator: 'outside', value: '12–24 months' },
+  { id: 'cond_10', field: 'Discount', operator: '>', value: '20%' },
 ];
 
 const CONDITION_FIELDS = [
@@ -239,17 +244,38 @@ const CONDITION_OPERATORS = [
   'equals', 'is not', 'is one of', 'includes', 'outside', '>', '<', '>=', '<=',
 ];
 
-const DEFAULT_APPROVERS = [
-  'Deal Desk', 'Deal Ops', 'VP of Sales', 'VP of Sales (EMEA)',
-  'Head of Mid-Market', 'Finance', 'Legal', 'CFO',
+const DEFAULT_APPROVERS: PaletteApprover[] = [
+  { id: 'appr_1', name: 'Deal Desk' },
+  { id: 'appr_2', name: 'Deal Ops' },
+  { id: 'appr_3', name: 'VP of Sales' },
+  { id: 'appr_4', name: 'VP of Sales (EMEA)' },
+  { id: 'appr_5', name: 'Head of Mid-Market' },
+  { id: 'appr_6', name: 'Finance' },
+  { id: 'appr_7', name: 'Legal' },
+  { id: 'appr_8', name: 'CFO' },
 ];
 
-const SCOPE_CATEGORIES: { label: string; items: string[] }[] = [
-  { label: 'Segment', items: ['Enterprise', 'Mid-Market', 'SMB'] },
-  { label: 'Region', items: ['EMEA', 'US'] },
-  { label: 'Market', items: ['Developed', 'Developing'] },
-  { label: 'Customer Type', items: ['New Customer', 'Existing Customer'] },
-  { label: 'Deal Type', items: ['Expansion'] },
+const SCOPE_CATEGORIES: { label: string; items: ScopeItem[] }[] = [
+  { label: 'Segment', items: [
+    { id: 'scope_1', name: 'Enterprise' },
+    { id: 'scope_2', name: 'Mid-Market' },
+    { id: 'scope_3', name: 'SMB' },
+  ]},
+  { label: 'Region', items: [
+    { id: 'scope_4', name: 'US' },
+    { id: 'scope_5', name: 'EMEA' },
+    { id: 'scope_6', name: 'APAC' },
+    { id: 'scope_7', name: 'LATAM' },
+  ]},
+  { label: 'Customer Type', items: [
+    { id: 'scope_8', name: 'New Customer' },
+    { id: 'scope_9', name: 'Existing Customer' },
+  ]},
+  { label: 'Deal Type', items: [
+    { id: 'scope_10', name: 'New Business' },
+    { id: 'scope_11', name: 'Amendment' },
+    { id: 'scope_12', name: 'Renewal' },
+  ]},
 ];
 
 // ---------------------------------------------------------------------------
@@ -289,6 +315,12 @@ interface CanvasState {
   scopes: string[];
 }
 
+interface BuilderCanvas {
+  conditionIds: string[];
+  approverIds: string[];
+  scopeIds: string[];
+}
+
 function BuilderView({
   templates,
   onSaveTrigger,
@@ -296,39 +328,57 @@ function BuilderView({
   templates: TemplateBlock[];
   onSaveTrigger: (canvas: CanvasState) => void;
 }) {
-  const [canvas, setCanvas] = useState<CanvasState>({ conditions: [], approvers: [], scopes: [] });
+  const [canvas, setCanvas] = useState<BuilderCanvas>({ conditionIds: [], approverIds: [], scopeIds: [] });
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     conditions: true, approvers: true, scopes: true,
   });
 
   const [paletteConditions, setPaletteConditions] = useState<PaletteCondition[]>(DEFAULT_CONDITIONS);
-  const [paletteApprovers, setPaletteApprovers] = useState<string[]>(DEFAULT_APPROVERS);
+  const [paletteApprovers, setPaletteApprovers] = useState<PaletteApprover[]>(DEFAULT_APPROVERS);
   const [scopeCategories, setScopeCategories] = useState(SCOPE_CATEGORIES.map(c => ({ ...c, items: [...c.items] })));
 
   const [showAddCondition, setShowAddCondition] = useState(false);
-  const [newCondition, setNewCondition] = useState<PaletteCondition>({ field: CONDITION_FIELDS[0], operator: CONDITION_OPERATORS[0], value: '' });
+  const [newCondition, setNewCondition] = useState<{ field: string; operator: string; value: string }>({ field: CONDITION_FIELDS[0], operator: CONDITION_OPERATORS[0], value: '' });
   const [showAddApprover, setShowAddApprover] = useState(false);
   const [newApprover, setNewApprover] = useState('');
   const [addingScopeTo, setAddingScopeTo] = useState<string | null>(null);
   const [newScopeItem, setNewScopeItem] = useState('');
 
+  const [editingConditionId, setEditingConditionId] = useState<string | null>(null);
+  const [editConditionDraft, setEditConditionDraft] = useState({ field: '', operator: '', value: '' });
+  const [editingApproverId, setEditingApproverId] = useState<string | null>(null);
+  const [editApproverDraft, setEditApproverDraft] = useState('');
+  const [editingScopeId, setEditingScopeId] = useState<string | null>(null);
+  const [editScopeDraft, setEditScopeDraft] = useState('');
+
+  const allScopeItems = useMemo(() => scopeCategories.flatMap(c => c.items), [scopeCategories]);
+  const resolvedConditions = useMemo(
+    () => canvas.conditionIds.map(id => paletteConditions.find(c => c.id === id)).filter(Boolean) as PaletteCondition[],
+    [canvas.conditionIds, paletteConditions]
+  );
+  const resolvedApprovers = useMemo(
+    () => canvas.approverIds.map(id => paletteApprovers.find(a => a.id === id)).filter(Boolean) as PaletteApprover[],
+    [canvas.approverIds, paletteApprovers]
+  );
+  const resolvedScopes = useMemo(
+    () => canvas.scopeIds.map(id => allScopeItems.find(i => i.id === id)).filter(Boolean) as ScopeItem[],
+    [canvas.scopeIds, allScopeItems]
+  );
+
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
 
   const addCondition = (c: PaletteCondition) => {
-    if (canvas.conditions.some(x => conditionKey(x) === conditionKey(c))) return;
-    setCanvas(prev => ({ ...prev, conditions: [...prev.conditions, c] }));
+    if (canvas.conditionIds.includes(c.id)) return;
+    setCanvas(prev => ({ ...prev, conditionIds: [...prev.conditionIds, c.id] }));
   };
   const removeCondition = (idx: number) =>
-    setCanvas(prev => ({ ...prev, conditions: prev.conditions.filter((_, i) => i !== idx) }));
+    setCanvas(prev => ({ ...prev, conditionIds: prev.conditionIds.filter((_, i) => i !== idx) }));
 
   const removePaletteCondition = (idx: number) => {
     const removed = paletteConditions[idx];
     setPaletteConditions(prev => prev.filter((_, i) => i !== idx));
-    setCanvas(prev => ({
-      ...prev,
-      conditions: prev.conditions.filter(c => conditionKey(c) !== conditionKey(removed)),
-    }));
+    setCanvas(prev => ({ ...prev, conditionIds: prev.conditionIds.filter(id => id !== removed.id) }));
   };
 
   const handleAddCondition = () => {
@@ -337,107 +387,177 @@ function BuilderView({
       toast.error('This condition already exists');
       return;
     }
-    setPaletteConditions(prev => [...prev, { ...newCondition, value: newCondition.value.trim() }]);
+    setPaletteConditions(prev => [...prev, { id: nextBlockId('cond'), field: newCondition.field, operator: newCondition.operator, value: newCondition.value.trim() }]);
     setNewCondition({ field: CONDITION_FIELDS[0], operator: CONDITION_OPERATORS[0], value: '' });
     setShowAddCondition(false);
     toast.success('Condition added to palette');
   };
 
-  const addApprover = (a: string) => {
-    if (canvas.approvers.includes(a)) return;
-    setCanvas(prev => ({ ...prev, approvers: [...prev.approvers, a] }));
+  const startEditCondition = (c: PaletteCondition) => {
+    setEditingConditionId(c.id);
+    setEditConditionDraft({ field: c.field, operator: c.operator, value: c.value });
+  };
+  const saveEditCondition = () => {
+    if (!editingConditionId || !editConditionDraft.value.trim()) return;
+    const oldCond = paletteConditions.find(c => c.id === editingConditionId);
+    if (oldCond) {
+      const oldText = `${oldCond.field} ${oldCond.operator} ${oldCond.value}`;
+      const newText = `${editConditionDraft.field} ${editConditionDraft.operator} ${editConditionDraft.value.trim()}`;
+      if (oldText !== newText) updateConditionText(oldText, newText);
+    }
+    setPaletteConditions(prev => prev.map(c =>
+      c.id === editingConditionId
+        ? { ...c, field: editConditionDraft.field, operator: editConditionDraft.operator, value: editConditionDraft.value.trim() }
+        : c
+    ));
+    setEditingConditionId(null);
+    toast.success('Condition updated — all triggers using it are now current');
+  };
+  const cancelEditCondition = () => setEditingConditionId(null);
+
+  const addApprover = (a: PaletteApprover) => {
+    if (canvas.approverIds.includes(a.id)) return;
+    setCanvas(prev => ({ ...prev, approverIds: [...prev.approverIds, a.id] }));
   };
   const removeApprover = (idx: number) =>
-    setCanvas(prev => ({ ...prev, approvers: prev.approvers.filter((_, i) => i !== idx) }));
+    setCanvas(prev => ({ ...prev, approverIds: prev.approverIds.filter((_, i) => i !== idx) }));
 
   const removePaletteApprover = (idx: number) => {
     const removed = paletteApprovers[idx];
     setPaletteApprovers(prev => prev.filter((_, i) => i !== idx));
-    setCanvas(prev => ({
-      ...prev,
-      approvers: prev.approvers.filter(a => a !== removed),
-    }));
+    setCanvas(prev => ({ ...prev, approverIds: prev.approverIds.filter(id => id !== removed.id) }));
   };
 
   const handleAddApprover = () => {
     const name = newApprover.trim();
     if (!name) return;
-    if (paletteApprovers.some(a => a.toLowerCase() === name.toLowerCase())) {
+    if (paletteApprovers.some(a => a.name.toLowerCase() === name.toLowerCase())) {
       toast.error('This approver already exists');
       return;
     }
-    setPaletteApprovers(prev => [...prev, name]);
+    setPaletteApprovers(prev => [...prev, { id: nextBlockId('appr'), name }]);
     setNewApprover('');
     setShowAddApprover(false);
     toast.success('Approver added to palette');
   };
+
+  const startEditApprover = (a: PaletteApprover) => {
+    setEditingApproverId(a.id);
+    setEditApproverDraft(a.name);
+  };
+  const saveEditApprover = () => {
+    if (!editingApproverId || !editApproverDraft.trim()) return;
+    const oldAppr = paletteApprovers.find(a => a.id === editingApproverId);
+    if (oldAppr && oldAppr.name !== editApproverDraft.trim()) {
+      updateApproverName(oldAppr.name, editApproverDraft.trim());
+    }
+    setPaletteApprovers(prev => prev.map(a =>
+      a.id === editingApproverId ? { ...a, name: editApproverDraft.trim() } : a
+    ));
+    setEditingApproverId(null);
+    toast.success('Approver updated across all triggers');
+  };
+  const cancelEditApprover = () => setEditingApproverId(null);
 
   const handleAddScopeItem = (catLabel: string) => {
     const name = newScopeItem.trim();
     if (!name) return;
     setScopeCategories(prev => prev.map(cat => {
       if (cat.label !== catLabel) return cat;
-      if (cat.items.some(i => i.toLowerCase() === name.toLowerCase())) return cat;
-      return { ...cat, items: [...cat.items, name] };
+      if (cat.items.some(i => i.name.toLowerCase() === name.toLowerCase())) return cat;
+      return { ...cat, items: [...cat.items, { id: nextBlockId('scope'), name }] };
     }));
     setNewScopeItem('');
     setAddingScopeTo(null);
     toast.success(`Added "${name}" to ${catLabel}`);
   };
 
-  const removeScopeCategoryItem = (catLabel: string, item: string) => {
+  const removeScopeCategoryItem = (catLabel: string, itemId: string) => {
     setScopeCategories(prev => prev.map(cat => {
       if (cat.label !== catLabel) return cat;
-      return { ...cat, items: cat.items.filter(i => i !== item) };
+      return { ...cat, items: cat.items.filter(i => i.id !== itemId) };
     }));
-    setCanvas(prev => ({
-      ...prev,
-      scopes: prev.scopes.filter(s => s !== item),
-    }));
+    setCanvas(prev => ({ ...prev, scopeIds: prev.scopeIds.filter(id => id !== itemId) }));
   };
 
-  const addScope = (s: string) => {
-    if (canvas.scopes.includes(s)) return;
-    setCanvas(prev => ({ ...prev, scopes: [...prev.scopes, s] }));
+  const addScope = (item: ScopeItem) => {
+    if (canvas.scopeIds.includes(item.id)) return;
+    setCanvas(prev => ({ ...prev, scopeIds: [...prev.scopeIds, item.id] }));
   };
   const removeScope = (idx: number) =>
-    setCanvas(prev => ({ ...prev, scopes: prev.scopes.filter((_, i) => i !== idx) }));
+    setCanvas(prev => ({ ...prev, scopeIds: prev.scopeIds.filter((_, i) => i !== idx) }));
 
-  const clearCanvas = () => setCanvas({ conditions: [], approvers: [], scopes: [] });
+  const startEditScope = (item: ScopeItem) => {
+    setEditingScopeId(item.id);
+    setEditScopeDraft(item.name);
+  };
+  const saveEditScope = () => {
+    if (!editingScopeId || !editScopeDraft.trim()) return;
+    const oldScope = allScopeItems.find(i => i.id === editingScopeId);
+    if (oldScope && oldScope.name !== editScopeDraft.trim()) {
+      updateScopeName(oldScope.name, editScopeDraft.trim());
+    }
+    setScopeCategories(prev => prev.map(cat => ({
+      ...cat,
+      items: cat.items.map(i => i.id === editingScopeId ? { ...i, name: editScopeDraft.trim() } : i),
+    })));
+    setEditingScopeId(null);
+    toast.success('Scope value updated across all triggers');
+  };
+  const cancelEditScope = () => setEditingScopeId(null);
+
+  const clearCanvas = () => setCanvas({ conditionIds: [], approverIds: [], scopeIds: [] });
 
   const loadTemplate = (t: TemplateBlock) => {
-    setCanvas({
-      conditions: [t.condition],
-      approvers: [...t.approvers],
-      scopes: scopeItems(t.scope),
-    });
+    let cond = paletteConditions.find(c => conditionKey(c) === conditionKey(t.condition));
+    if (!cond) {
+      const newCond: PaletteCondition = { id: nextBlockId('cond'), ...t.condition };
+      setPaletteConditions(prev => [...prev, newCond]);
+      cond = newCond;
+    }
+    const apprIds = t.approvers
+      .map(name => paletteApprovers.find(a => a.name === name)?.id)
+      .filter(Boolean) as string[];
+    const sNames = scopeItems(t.scope);
+    const scpIds = sNames
+      .map(name => allScopeItems.find(i => i.name === name)?.id)
+      .filter(Boolean) as string[];
+    setCanvas({ conditionIds: [cond.id], approverIds: apprIds, scopeIds: scpIds });
   };
 
-  const canSave = canvas.conditions.length > 0 && canvas.approvers.length > 0;
+  const canSave = canvas.conditionIds.length > 0 && canvas.approverIds.length > 0;
 
   const matchedTriggers: MatchedTrigger[] = useMemo(() => {
-    if (canvas.conditions.length === 0) return [];
-    return matchTriggersByConditions(canvas.conditions, getAllTriggers());
-  }, [canvas.conditions]);
+    if (resolvedConditions.length === 0) return [];
+    return matchTriggersByConditions(resolvedConditions, getAllTriggers());
+  }, [resolvedConditions]);
 
   const exactConflicts = matchedTriggers.filter(m => m.matchLevel === 'exact');
   const [relatedTriggersOpen, setRelatedTriggersOpen] = useState(true);
 
+  const resolvedScopeNames = useMemo(() => resolvedScopes.map(s => s.name), [resolvedScopes]);
   const scopeConflicts = useMemo(() => {
-    if (canvas.scopes.length === 0 || exactConflicts.length === 0) return [];
+    if (resolvedScopeNames.length === 0 || exactConflicts.length === 0) return [];
     return exactConflicts.filter(m =>
       m.trigger.scope.some(s =>
-        s === 'All segments' || canvas.scopes.some(cs => cs.toLowerCase() === s.toLowerCase())
+        s === 'All segments' || resolvedScopeNames.some(cs => cs.toLowerCase() === s.toLowerCase())
       )
     );
-  }, [exactConflicts, canvas.scopes]);
+  }, [exactConflicts, resolvedScopeNames]);
 
-  const isConditionActive = (c: PaletteCondition) =>
-    canvas.conditions.some(x => conditionKey(x) === conditionKey(c));
-  const isApproverActive = (a: string) => canvas.approvers.includes(a);
-  const isScopeActive = (sc: string) => canvas.scopes.includes(sc);
+  const isConditionActive = (c: PaletteCondition) => canvas.conditionIds.includes(c.id);
+  const isApproverActive = (a: PaletteApprover) => canvas.approverIds.includes(a.id);
+  const isScopeActive = (item: ScopeItem) => canvas.scopeIds.includes(item.id);
 
-  const totalItems = canvas.conditions.length + canvas.approvers.length + canvas.scopes.length;
+  const totalItems = canvas.conditionIds.length + canvas.approverIds.length + canvas.scopeIds.length;
+
+  const handleSaveCanvas = () => {
+    onSaveTrigger({
+      conditions: resolvedConditions.map(({ field, operator, value }) => ({ field, operator, value })),
+      approvers: resolvedApprovers.map(a => a.name),
+      scopes: resolvedScopes.map(s => s.name),
+    });
+  };
 
   return (
     <div className="flex-1 flex overflow-hidden">
@@ -458,19 +578,69 @@ function BuilderView({
             <div className="flex flex-col gap-0.5">
               {paletteConditions.map((c, i) => {
                 const active = isConditionActive(c);
+                if (editingConditionId === c.id) {
+                  return (
+                    <div key={c.id} className="p-2.5 border border-[#5d7f8e] rounded-lg bg-[#f5f7f8] space-y-1.5">
+                      <select
+                        value={editConditionDraft.field}
+                        onChange={(e) => setEditConditionDraft(prev => ({ ...prev, field: e.target.value }))}
+                        className="w-full h-7 pl-2 pr-5 border border-[#e2e0d8] rounded-md text-[11px] bg-white focus:outline-none focus:ring-2 focus:ring-[#5d7f8e]/40 appearance-none font-mono"
+                      >
+                        {CONDITION_FIELDS.map(f => <option key={f} value={f}>{f}</option>)}
+                      </select>
+                      <select
+                        value={editConditionDraft.operator}
+                        onChange={(e) => setEditConditionDraft(prev => ({ ...prev, operator: e.target.value }))}
+                        className="w-full h-7 pl-2 pr-5 border border-[#e2e0d8] rounded-md text-[11px] bg-white focus:outline-none focus:ring-2 focus:ring-[#5d7f8e]/40 appearance-none font-mono"
+                      >
+                        {CONDITION_OPERATORS.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                      <input
+                        type="text"
+                        value={editConditionDraft.value}
+                        onChange={(e) => setEditConditionDraft(prev => ({ ...prev, value: e.target.value }))}
+                        onKeyDown={(e) => { if (e.key === 'Enter') saveEditCondition(); if (e.key === 'Escape') cancelEditCondition(); }}
+                        className="w-full h-7 px-2 border border-[#e2e0d8] rounded-md text-[11px] bg-white focus:outline-none focus:ring-2 focus:ring-[#5d7f8e]/40 font-mono"
+                        autoFocus
+                      />
+                      <div className="flex gap-1.5 pt-0.5">
+                        <button
+                          onClick={saveEditCondition}
+                          disabled={!editConditionDraft.value.trim()}
+                          className="flex-1 h-7 rounded-md bg-[#5d7f8e] text-white text-[11px] font-medium disabled:opacity-40 hover:bg-[#4a6b7a] transition-colors"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEditCondition}
+                          className="h-7 px-3 rounded-md border border-[#e2e0d8] text-[11px] text-[#666] hover:bg-[#f5f6f8] transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
                 return (
-                  <div key={i} className="group flex items-center">
+                  <div key={c.id} className="group flex items-center">
                     <button
-                      onClick={() => addCondition(c)}
+                      onClick={() => active ? startEditCondition(c) : addCondition(c)}
                       className={`flex-1 text-left px-2.5 py-1.5 text-[11px] border-l-2 transition-colors ${
                         active
-                          ? 'border-l-[#5d7f8e] bg-[#f0f4f6]'
+                          ? 'border-l-[#5d7f8e] bg-[#f0f4f6] cursor-text'
                           : 'border-l-transparent hover:bg-[#f0efe9]'
                       }`}
                     >
                       <span className="font-semibold text-[#1a1a1a]">{c.field}</span>{' '}
                       <span className="font-mono text-[10px] text-[#888]">{c.operator}</span>{' '}
                       <span className="font-mono text-[10px] text-[#1a1a1a]">{c.value}</span>
+                    </button>
+                    <button
+                      onClick={() => startEditCondition(c)}
+                      className={`p-1 text-[#ccc] hover:text-[#5d7f8e] transition-colors flex-shrink-0 ${active ? 'opacity-60 hover:opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                      title="Edit condition"
+                    >
+                      <Pencil className="w-2.5 h-2.5" />
                     </button>
                     {!active && (
                       <button
@@ -550,17 +720,54 @@ function BuilderView({
             <div className="flex flex-wrap gap-1.5">
               {paletteApprovers.map((a, i) => {
                 const active = isApproverActive(a);
+                if (editingApproverId === a.id) {
+                  return (
+                    <div key={a.id} className="w-full flex gap-1.5">
+                      <input
+                        type="text"
+                        value={editApproverDraft}
+                        onChange={(e) => setEditApproverDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveEditApprover();
+                          if (e.key === 'Escape') cancelEditApprover();
+                        }}
+                        className="flex-1 h-7 px-2 border border-[#5a7d63] rounded-md text-[11px] bg-white focus:outline-none focus:ring-2 focus:ring-[#5a7d63]/40"
+                        autoFocus
+                      />
+                      <button
+                        onClick={saveEditApprover}
+                        disabled={!editApproverDraft.trim()}
+                        className="h-7 px-3 rounded-md bg-[#5a7d63] text-white text-[11px] font-medium disabled:opacity-40 hover:bg-[#4a6d53] transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={cancelEditApprover}
+                        className="h-7 px-2 rounded-md border border-[#e2e0d8] text-[#666] hover:bg-[#f5f6f8] transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  );
+                }
                 return (
-                  <span key={a} className="group relative inline-flex items-center">
+                  <span key={a.id} className="group relative inline-flex items-center">
                     <button
-                      onClick={() => addApprover(a)}
+                      onClick={() => active ? startEditApprover(a) : addApprover(a)}
                       className={`px-2.5 py-1 text-[11px] font-medium border rounded-md transition-colors ${
                         active
-                          ? 'border-[#5a7d63] bg-[#f0f5f1] text-[#1a1a1a]'
+                          ? 'border-[#5a7d63] bg-[#f0f5f1] text-[#1a1a1a] cursor-text'
                           : 'border-[#e2e0d8] bg-white text-[#333] hover:border-[#999]'
-                      } ${!active ? 'pr-5' : ''}`}
+                      } ${!active ? 'pr-8' : 'pr-5'}`}
                     >
-                      {a}
+                      {a.name}
+                    </button>
+                    <button
+                      onClick={() => startEditApprover(a)}
+                      className={`absolute top-1/2 -translate-y-1/2 p-0.5 text-[#ccc] hover:text-[#5a7d63] transition-colors ${active ? 'right-1 opacity-60 hover:opacity-100' : 'right-4 opacity-0 group-hover:opacity-100'}`}
+                      title="Edit approver"
+                    >
+                      <Pencil className="w-2 h-2" />
                     </button>
                     {!active && (
                       <button
@@ -633,7 +840,8 @@ function BuilderView({
                       <select
                         value=""
                         onChange={(e) => {
-                          if (e.target.value) addScope(e.target.value);
+                          const item = cat.items.find(i => i.id === e.target.value);
+                          if (item) addScope(item);
                         }}
                         className={`w-full h-7 pl-2 pr-7 text-[11px] font-medium border rounded-md appearance-none cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-[#8a7a68]/40 ${
                           activeInCat.length > 0
@@ -645,8 +853,8 @@ function BuilderView({
                           {cat.label}{activeInCat.length > 0 ? ` (${activeInCat.length})` : ''}
                         </option>
                         {cat.items.map(item => (
-                          <option key={item} value={item} disabled={isScopeActive(item)}>
-                            {isScopeActive(item) ? `✓ ${item}` : item}
+                          <option key={item.id} value={item.id} disabled={isScopeActive(item)}>
+                            {isScopeActive(item) ? `✓ ${item.name}` : item.name}
                           </option>
                         ))}
                       </select>
@@ -655,31 +863,68 @@ function BuilderView({
                     {activeInCat.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {activeInCat.map(item => (
-                          <span
-                            key={item}
-                            className="group/tag inline-flex items-center gap-1 pl-2 pr-1 py-0.5 text-[10px] font-medium bg-[#f8f7f5] border border-[#8a7a68] rounded text-[#1a1a1a]"
-                          >
-                            {item}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const idx = canvas.scopes.indexOf(item);
-                                if (idx >= 0) removeScope(idx);
-                              }}
-                              className="p-0.5 rounded hover:bg-[#e2e0d8] transition-colors"
-                              title="Remove from rule"
+                          editingScopeId === item.id ? (
+                            <div key={item.id} className="w-full flex gap-1 mt-0.5">
+                              <input
+                                type="text"
+                                value={editScopeDraft}
+                                onChange={(e) => setEditScopeDraft(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') saveEditScope();
+                                  if (e.key === 'Escape') cancelEditScope();
+                                }}
+                                className="flex-1 h-6 px-2 border border-[#8a7a68] rounded-md text-[10px] bg-white focus:outline-none focus:ring-2 focus:ring-[#8a7a68]/40"
+                                autoFocus
+                              />
+                              <button
+                                onClick={saveEditScope}
+                                disabled={!editScopeDraft.trim()}
+                                className="h-6 px-2 rounded-md bg-[#8a7a68] text-white text-[10px] font-medium disabled:opacity-40 hover:bg-[#7a6a58] transition-colors"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={cancelEditScope}
+                                className="h-6 px-1.5 rounded-md border border-[#e2e0d8] text-[#666] hover:bg-[#f5f6f8] transition-colors"
+                              >
+                                <X className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span
+                              key={item.id}
+                              className="group/tag inline-flex items-center gap-1 pl-2 pr-1 py-0.5 text-[10px] font-medium bg-[#f8f7f5] border border-[#8a7a68] rounded text-[#1a1a1a]"
                             >
-                              <X className="w-2 h-2" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeScopeCategoryItem(cat.label, item)}
-                              className="p-0.5 rounded opacity-0 group-hover/tag:opacity-100 hover:bg-red-100 text-red-400 hover:text-red-600 transition-colors"
-                              title="Delete from palette"
-                            >
-                              <Trash2 className="w-2 h-2" />
-                            </button>
-                          </span>
+                              {item.name}
+                              <button
+                                type="button"
+                                onClick={() => startEditScope(item)}
+                                className="p-0.5 rounded opacity-0 group-hover/tag:opacity-100 hover:bg-[#e2e0d8] text-[#999] hover:text-[#8a7a68] transition-colors"
+                                title="Edit value"
+                              >
+                                <Pencil className="w-2 h-2" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const idx = canvas.scopeIds.indexOf(item.id);
+                                  if (idx >= 0) removeScope(idx);
+                                }}
+                                className="p-0.5 rounded hover:bg-[#e2e0d8] transition-colors"
+                                title="Remove from rule"
+                              >
+                                <X className="w-2 h-2" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeScopeCategoryItem(cat.label, item.id)}
+                                className="p-0.5 rounded opacity-0 group-hover/tag:opacity-100 hover:bg-red-100 text-red-400 hover:text-red-600 transition-colors"
+                                title="Delete from palette"
+                              >
+                                <Trash2 className="w-2 h-2" />
+                              </button>
+                            </span>
+                          )
                         ))}
                       </div>
                     )}
@@ -737,9 +982,9 @@ function BuilderView({
               <h2 className="text-[14px] font-semibold text-[#1a1a1a]">Rule Definition</h2>
               {totalItems > 0 && (
                 <span className="text-[11px] font-mono text-[#999891] bg-[#f0efe9] px-2 py-0.5 rounded-md border border-[#e2e0d8]">
-                  {canvas.conditions.length} condition{canvas.conditions.length !== 1 ? 's' : ''}
-                  {canvas.approvers.length > 0 && `, ${canvas.approvers.length} approver${canvas.approvers.length !== 1 ? 's' : ''}`}
-                  {canvas.scopes.length > 0 && `, ${canvas.scopes.length} scope${canvas.scopes.length !== 1 ? 's' : ''}`}
+                  {canvas.conditionIds.length} condition{canvas.conditionIds.length !== 1 ? 's' : ''}
+                  {canvas.approverIds.length > 0 && `, ${canvas.approverIds.length} approver${canvas.approverIds.length !== 1 ? 's' : ''}`}
+                  {canvas.scopeIds.length > 0 && `, ${canvas.scopeIds.length} scope${canvas.scopeIds.length !== 1 ? 's' : ''}`}
                 </span>
               )}
             </div>
@@ -755,7 +1000,7 @@ function BuilderView({
               )}
               {canSave && (
                 <button
-                  onClick={() => onSaveTrigger(canvas)}
+                  onClick={handleSaveCanvas}
                   className={`h-7 px-3 rounded-md text-[11px] font-medium inline-flex items-center gap-1.5 transition-colors ${
                     exactConflicts.length > 0
                       ? 'bg-amber-600 text-white hover:bg-amber-700 border border-amber-700'
@@ -780,7 +1025,7 @@ function BuilderView({
               step={1}
               label="CONDITIONS"
               accent={BLOCK_COLORS.when.accent}
-              count={canvas.conditions.length}
+              count={resolvedConditions.length}
               badge={exactConflicts.length > 0 ? (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-100 border border-amber-200 text-amber-700 text-[10px] font-semibold" title={`${exactConflicts.length} existing trigger${exactConflicts.length > 1 ? 's' : ''} share${exactConflicts.length === 1 ? 's' : ''} this exact condition`}>
                   <AlertTriangle className="w-2.5 h-2.5" />
@@ -792,12 +1037,12 @@ function BuilderView({
                   {matchedTriggers.length} related
                 </span>
               ) : undefined}
-              empty={canvas.conditions.length === 0}
+              empty={resolvedConditions.length === 0}
               emptyText="No conditions defined — click items from Rule Components panel"
             >
               <div className="flex flex-col">
-                {canvas.conditions.map((c, i) => (
-                  <div key={i} className="flex items-center px-3 py-2 border-b border-[#f0efe9] last:border-b-0 hover:bg-[#f9fafb] transition-colors">
+                {resolvedConditions.map((c, i) => (
+                  <div key={c.id} className="flex items-center px-3 py-2 border-b border-[#f0efe9] last:border-b-0 hover:bg-[#f9fafb] transition-colors">
                     <span className="flex-1 text-[12px]">
                       <span className="font-semibold text-[#1a1a1a]">{c.field}</span>{' '}
                       <span className="font-mono text-[11px] text-[#888]">{c.operator}</span>{' '}
@@ -816,17 +1061,17 @@ function BuilderView({
               step={2}
               label="APPROVERS"
               accent={BLOCK_COLORS.then.accent}
-              count={canvas.approvers.length}
-              empty={canvas.approvers.length === 0}
+              count={resolvedApprovers.length}
+              empty={resolvedApprovers.length === 0}
               emptyText="No approvers defined — click items from Rule Components panel"
             >
               <div className="px-3 py-2.5">
                 <div className="flex items-center gap-2 flex-wrap">
-                  {canvas.approvers.map((a, i) => (
-                    <div key={a} className="flex items-center gap-1.5">
+                  {resolvedApprovers.map((a, i) => (
+                    <div key={a.id} className="flex items-center gap-1.5">
                       {i > 0 && <ArrowRight className="w-3 h-3 text-[#ccc] flex-shrink-0" />}
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-[#e2e0d8] bg-white text-[12px] font-medium text-[#1a1a1a]">
-                        {a}
+                        {a.name}
                         <button onClick={() => removeApprover(i)} className="p-0.5 rounded text-[#ccc] hover:text-red-500 transition-colors">
                           <X className="w-2.5 h-2.5" />
                         </button>
@@ -843,15 +1088,15 @@ function BuilderView({
               label="SCOPE"
               sublabel="optional"
               accent={BLOCK_COLORS.scope.accent}
-              count={canvas.scopes.length}
-              empty={canvas.scopes.length === 0}
+              count={resolvedScopes.length}
+              empty={resolvedScopes.length === 0}
               emptyText="No scope restrictions defined"
             >
               <div className="px-3 py-2.5">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  {canvas.scopes.map((sc, i) => (
-                    <span key={sc} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-[#e2e0d8] bg-white text-[12px] font-medium text-[#1a1a1a]">
-                      {sc}
+                  {resolvedScopes.map((sc, i) => (
+                    <span key={sc.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-[#e2e0d8] bg-white text-[12px] font-medium text-[#1a1a1a]">
+                      {sc.name}
                       <button onClick={() => removeScope(i)} className="p-0.5 rounded text-[#ccc] hover:text-red-500 transition-colors">
                         <X className="w-2.5 h-2.5" />
                       </button>
@@ -1188,14 +1433,24 @@ export function Templates() {
     const conditionText = canvas.conditions
       .map(c => `${c.field} ${c.operator} ${c.value}`)
       .join(' AND ');
-    const triggerName = `${canvas.approvers[0]} — ${conditionText}`;
+    const firstCond = canvas.conditions[0]
+      ? `${canvas.conditions[0].field} ${canvas.conditions[0].operator} ${canvas.conditions[0].value}`
+      : 'Custom condition';
+    const extra = canvas.conditions.length > 1 ? ` +${canvas.conditions.length - 1}` : '';
+    const triggerName = `${firstCond}${extra}`;
 
     const fieldLower = canvas.conditions[0]?.field.toLowerCase() ?? '';
-    let category = 'custom';
-    if (['discount', 'price protection', 'price lock', 'product type', 'product'].some(f => fieldLower.includes(f))) {
-      category = 'pricing';
-    } else if (['billing frequency', 'payment terms', 'subscription term', 'contract'].some(f => fieldLower.includes(f))) {
-      category = 'terms';
+    let category = 'Products';
+    if (['discount', 'price protection', 'price lock'].some(f => fieldLower.includes(f))) {
+      category = 'Product Discounts';
+    } else if (fieldLower.includes('billing frequency')) {
+      category = 'Billing Frequency';
+    } else if (fieldLower.includes('payment terms')) {
+      category = 'Payment Terms';
+    } else if (['subscription term', 'contract', 'auto-renewal'].some(f => fieldLower.includes(f))) {
+      category = 'Subscription Terms';
+    } else if (['product type', 'product'].some(f => fieldLower.includes(f))) {
+      category = 'Products';
     }
 
     saveTrigger({
@@ -1230,7 +1485,7 @@ export function Templates() {
         <div className="flex items-center justify-between gap-4 mb-2.5">
           <div className="min-w-0">
             <h1 className="text-[15px] font-semibold text-[#1a1a1a] tracking-tight">Approval Rule Templates</h1>
-            <p className="text-[#999891] text-[11px] mt-0.5 font-mono">
+            <p className="text-[#999891] text-[11px] mt-0.5">
               {TEMPLATES.length} templates across {uniqueCategories} categories
             </p>
           </div>

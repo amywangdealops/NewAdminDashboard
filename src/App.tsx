@@ -9,6 +9,7 @@ import { UserList } from './components/UserList';
 import { Reporting } from './components/reporting';
 import { CrmWriteback } from './components/CrmWriteback';
 import { CrmRead } from './components/CrmRead';
+import { Metrics } from './components/Metrics';
 import { Toaster } from './components/ui/sonner';
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/" element={<AdminLayout />}>
           <Route index element={<Products />} />
           <Route path="terms" element={<TermsLibrary />} />
+          <Route path="metrics" element={<Metrics />} />
           <Route path="triggers" element={<ApprovalTriggers />} />
           <Route path="triggers/:category" element={<ApprovalTriggers />} />
           <Route path="approvers" element={<ApproversGroups />} />

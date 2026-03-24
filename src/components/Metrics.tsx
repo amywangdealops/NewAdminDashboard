@@ -1,7 +1,6 @@
-import { Plus, Search, Package, MoreVertical, Edit, Trash2, Eye, Copy, ChevronDown, X } from 'lucide-react';
+import { Plus, Search, DollarSign, MoreVertical, Edit, Trash2, Copy, ChevronDown, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
   DropdownMenu,
@@ -11,125 +10,103 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import {
-  type Product,
-  type ProductFormData,
-  listProducts,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-} from './productStore';
-import { ProductFormDrawer } from './ProductFormDrawer';
-import { ViewProductDrawer } from './ViewProductDrawer';
+  type Metric,
+  type MetricFormData,
+  listMetrics,
+  createMetric,
+  updateMetric,
+  deleteMetric,
+} from './metricStore';
+import { MetricFormDrawer } from './MetricFormDrawer';
+import { ViewMetricDrawer } from './ViewMetricDrawer';
 
 type DrawerState =
   | { type: 'closed' }
   | { type: 'add' }
-  | { type: 'edit'; product: Product }
-  | { type: 'duplicate'; product: Product }
-  | { type: 'view'; product: Product };
+  | { type: 'view'; metric: Metric }
+  | { type: 'edit'; metric: Metric }
+  | { type: 'duplicate'; metric: Metric };
 
-interface ProductFilters {
+interface MetricFilters {
   status: string;
-  segment: string;
-  category: string;
-  pricingModel: string;
+  type: string;
+  dataSource: string;
 }
 
-const EMPTY_FILTERS: ProductFilters = { status: '', segment: '', category: '', pricingModel: '' };
+const EMPTY_FILTERS: MetricFilters = { status: '', type: '', dataSource: '' };
 
-export function Products() {
-  const navigate = useNavigate();
+export function Metrics() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<ProductFilters>(EMPTY_FILTERS);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [filters, setFilters] = useState<MetricFilters>(EMPTY_FILTERS);
+  const [metrics, setMetrics] = useState<Metric[]>([]);
   const [drawer, setDrawer] = useState<DrawerState>({ type: 'closed' });
 
-  // Load products from store on mount
   useEffect(() => {
-    setProducts(listProducts());
+    setMetrics(listMetrics());
   }, []);
 
   // ─── Handlers ──────────────────────────────────────────
 
-  const handleAddProduct = () => {
+  const handleAddMetric = () => {
     setDrawer({ type: 'add' });
   };
 
-  const handleViewProduct = (product: Product) => {
-    setDrawer({ type: 'view', product });
+  const handleViewMetric = (metric: Metric) => {
+    setDrawer({ type: 'view', metric });
   };
 
-  const handleEditProduct = (product: Product) => {
-    setDrawer({ type: 'edit', product });
+  const handleEditMetric = (metric: Metric) => {
+    setDrawer({ type: 'edit', metric });
   };
 
-  const handleDuplicateProduct = (product: Product) => {
-    setDrawer({ type: 'duplicate', product });
+  const handleDuplicateMetric = (metric: Metric) => {
+    setDrawer({ type: 'duplicate', metric });
   };
 
-  const handleDeleteProduct = (product: Product) => {
-    if (product.triggersCount > 0) {
-      toast.error(`Cannot delete ${product.name}. It is used in ${product.triggersCount} trigger(s).`);
+  const handleDeleteMetric = (metric: Metric) => {
+    if (metric.usedInCount > 0) {
+      toast.error(`Cannot delete "${metric.name}". It is used in ${metric.usedInCount} report(s).`);
       return;
     }
-    deleteProduct(product.id);
-    setProducts(prev => prev.filter(p => p.id !== product.id));
-    toast.success(`Product "${product.name}" deleted successfully`);
+    deleteMetric(metric.id);
+    setMetrics(prev => prev.filter(m => m.id !== metric.id));
+    toast.success(`Metric "${metric.name}" deleted successfully`);
   };
 
   const handleCloseDrawer = () => {
     setDrawer({ type: 'closed' });
   };
 
-  const handleSaveProduct = (data: ProductFormData) => {
+  const handleSaveMetric = (data: MetricFormData) => {
     if (drawer.type === 'add' || drawer.type === 'duplicate') {
-      const created = createProduct(data);
-      setProducts(prev => [...prev, created]);
-      toast.success(drawer.type === 'add' ? 'Product added' : 'Product duplicated');
+      const created = createMetric(data);
+      setMetrics(prev => [...prev, created]);
+      toast.success(drawer.type === 'add' ? 'Metric added' : 'Metric duplicated');
     } else if (drawer.type === 'edit') {
-      const updated = updateProduct(drawer.product.id, data);
-      setProducts(prev => prev.map(p => p.id === updated.id ? updated : p));
-      toast.success('Product updated');
+      const updated = updateMetric(drawer.metric.id, data);
+      setMetrics(prev => prev.map(m => m.id === updated.id ? updated : m));
+      toast.success('Metric updated');
     }
     setDrawer({ type: 'closed' });
-  };
-
-  const handleViewToEdit = (product: Product) => {
-    setDrawer({ type: 'edit', product });
-  };
-
-  const handleViewTriggers = (productName: string, triggerCount: number) => {
-    if (triggerCount > 0) {
-      navigate('/triggers', { state: { filterProduct: productName } });
-      toast.info(`Viewing triggers for ${productName}`);
-    } else {
-      toast.info(`${productName} is not used in any triggers`);
-    }
   };
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
   // ─── Filtering ─────────────────────────────────────────
 
-  const filteredProducts = products.filter(product => {
-    if (filters.status && product.status !== filters.status) return false;
-    if (filters.segment && product.segment !== filters.segment) return false;
-    if (filters.category && product.category !== filters.category) return false;
-    if (filters.pricingModel && product.pricingModel !== filters.pricingModel) return false;
+  const filteredMetrics = metrics.filter(metric => {
+    if (filters.status && metric.status !== filters.status) return false;
+    if (filters.type && metric.type !== filters.type) return false;
+    if (filters.dataSource && metric.dataSource !== filters.dataSource) return false;
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     return (
-      product.name.toLowerCase().includes(query) ||
-      product.segment.toLowerCase().includes(query) ||
-      product.category.toLowerCase().includes(query) ||
-      product.pricingModel.toLowerCase().includes(query)
+      metric.name.toLowerCase().includes(query) ||
+      metric.description.toLowerCase().includes(query) ||
+      metric.type.toLowerCase().includes(query) ||
+      metric.calculationMethod.toLowerCase().includes(query)
     );
   });
-
-  // ─── Format helpers ────────────────────────────────────
-
-  const formatPrice = (product: Product) =>
-    `$${product.price.toFixed(product.pricePrecision ?? 2)}`;
 
   // ─── Render ────────────────────────────────────────────
 
@@ -139,61 +116,53 @@ export function Products() {
       <header className="border-b border-[#e2e0d8] bg-white px-6 py-3.5">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-[15px] font-semibold text-[#1a1a1a] tracking-tight">Products</h1>
-
+            <h1 className="text-[15px] font-semibold text-[#1a1a1a] tracking-tight">Metrics</h1>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#999891]" />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search metrics..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-48 h-8 pl-8 pr-3 bg-[#f5f6f8] border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] focus:bg-white text-[12px] transition-all placeholder:text-[#999891]"
-                aria-label="Search products"
+                aria-label="Search metrics"
               />
             </div>
             <button
-              onClick={handleAddProduct}
+              onClick={handleAddMetric}
               className="h-8 px-3 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] inline-flex items-center gap-1.5 text-[12px] font-medium transition-all shadow-sm whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 active:scale-[0.98]"
-              aria-label="Add new product"
+              aria-label="Add new metric"
             >
               <Plus className="w-3.5 h-3.5" />
-              Add Product
+              Add Metric
             </button>
           </div>
         </div>
       </header>
 
-      {/* Product Table */}
+      {/* Metric Table */}
       <div className="flex-1 overflow-auto p-6">
         <div className="bg-white rounded-lg border border-[#e2e0d8] overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="overflow-x-auto">
           <table className="w-full min-w-[800px]">
             <thead className="bg-[#f9fafb] border-b border-[#e2e0d8]">
               <tr>
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Product Name</th>
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Metric Name</th>
                 <ColumnFilter
-                  label="Segment"
-                  value={filters.segment}
-                  options={['Mid Market', 'Enterprise', 'Majors']}
-                  onChange={(v) => setFilters(prev => ({ ...prev, segment: v }))}
+                  label="Type"
+                  value={filters.type}
+                  options={['Financial', 'Operational', 'Custom']}
+                  onChange={(v) => setFilters(prev => ({ ...prev, type: v }))}
                 />
+                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Format</th>
                 <ColumnFilter
-                  label="Category"
-                  value={filters.category}
-                  options={['Add-ons', 'Core']}
-                  onChange={(v) => setFilters(prev => ({ ...prev, category: v }))}
+                  label="Source"
+                  value={filters.dataSource}
+                  options={['CRM', 'Manual', 'Calculated']}
+                  onChange={(v) => setFilters(prev => ({ ...prev, dataSource: v }))}
                 />
-                <ColumnFilter
-                  label="Pricing Model"
-                  value={filters.pricingModel}
-                  options={['Flat Fee Recurring', 'Consumption', 'Other']}
-                  onChange={(v) => setFilters(prev => ({ ...prev, pricingModel: v }))}
-                />
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Price</th>
-                <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Triggers</th>
                 <ColumnFilter
                   label="Status"
                   value={filters.status}
@@ -204,52 +173,41 @@ export function Products() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f0f1f4]">
-              {filteredProducts.length === 0 ? (
+              {filteredMetrics.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center">
-                    <Package className="w-10 h-10 text-[#e5e7eb] mx-auto mb-2" />
+                  <td colSpan={7} className="px-4 py-12 text-center">
+                    <DollarSign className="w-10 h-10 text-[#e5e7eb] mx-auto mb-2" />
                     <p className="text-[13px] font-medium text-[#333333]">
-                      {searchQuery || activeFilterCount > 0 ? 'No products match the current filters' : 'No products found'}
+                      {searchQuery ? `No metrics found matching "${searchQuery}"` : 'No metrics found'}
                     </p>
                     <p className="text-[12px] text-[#999891] mt-0.5">
-                      {searchQuery || activeFilterCount > 0 ? 'Try adjusting your search or filters' : 'Add your first product to get started'}
+                      {searchQuery ? 'Try a different search term' : 'Add your first metric to get started'}
                     </p>
                   </td>
+
                 </tr>
               ) : (
-                filteredProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-[#f9fafb] transition-colors cursor-pointer" onClick={() => handleViewProduct(product)}>
+                filteredMetrics.map((metric) => (
+                <tr key={metric.id} className="hover:bg-[#f9fafb] transition-colors cursor-pointer" onClick={() => handleViewMetric(metric)}>
                   <td className="px-4 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <Package className="w-3.5 h-3.5 text-[#1a1a1a] flex-shrink-0" aria-hidden="true" />
-                      <span className="text-[13px] font-medium text-[#1a1a1a]">{product.name}</span>
-                    </div>
+                    <span className="text-[13px] font-medium text-[#1a1a1a]">{metric.name}</span>
                   </td>
-                  <td className="px-4 py-2.5 text-[13px] text-[#666666]">{product.segment}</td>
                   <td className="px-4 py-2.5">
-                    <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-[11px] font-medium">
-                      {product.category}
-                    </span>
+                    <TypeBadge type={metric.type} />
                   </td>
-                  <td className="px-4 py-2.5 text-[13px] text-[#666666]">{product.pricingModel}</td>
-                  <td className="px-4 py-2.5 text-[13px] font-medium text-[#1a1a1a] tabular-nums">{formatPrice(product)}</td>
-                  <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => handleViewTriggers(product.name, product.triggersCount)}
-                      className="text-[#1a1a1a] hover:text-[#333333] text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:ring-offset-1 rounded px-0.5 tabular-nums transition-colors"
-                      aria-label={`View ${product.triggersCount} triggers using ${product.name}`}
-                    >
-                      {product.triggersCount}
-                    </button>
+
+                  <td className="px-4 py-2.5 text-[13px] text-[#666666]">{metric.format}</td>
+                  <td className="px-4 py-2.5">
+                    <SourceBadge source={metric.dataSource} />
                   </td>
                   <td className="px-4 py-2.5">
                     <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium ${
-                      product.status === 'Active'
+                      metric.status === 'Active'
                         ? 'bg-emerald-50 text-emerald-700'
                         : 'bg-gray-100 text-gray-600'
                     }`}>
-                      <span className={`w-1 h-1 rounded-full ${product.status === 'Active' ? 'bg-emerald-500' : 'bg-gray-400'}`}></span>
-                      {product.status}
+                      <span className={`w-1 h-1 rounded-full ${metric.status === 'Active' ? 'bg-emerald-500' : 'bg-gray-400'}`}></span>
+                      {metric.status}
                     </span>
                   </td>
                   <td className="px-3 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
@@ -257,7 +215,7 @@ export function Products() {
                       <DropdownMenuTrigger asChild>
                         <button
                           className="text-[#999891] hover:text-[#333333] p-1 rounded-md hover:bg-[#f0efe9] transition-colors focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
-                          aria-label={`Actions for ${product.name}`}
+                          aria-label={`Actions for ${metric.name}`}
                           aria-haspopup="true"
                         >
                           <MoreVertical className="w-3.5 h-3.5" aria-hidden="true" />
@@ -265,21 +223,14 @@ export function Products() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44 bg-white border border-[#e2e0d8] shadow-lg rounded-lg">
                         <DropdownMenuItem
-                          onClick={() => handleViewProduct(product)}
-                          className="cursor-pointer text-[13px] focus:bg-[#f9fafb]"
-                        >
-                          <Eye className="w-3.5 h-3.5 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleEditProduct(product)}
+                          onClick={() => handleEditMetric(metric)}
                           className="cursor-pointer text-[13px] focus:bg-[#f9fafb]"
                         >
                           <Edit className="w-3.5 h-3.5 mr-2" />
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => handleDuplicateProduct(product)}
+                          onClick={() => handleDuplicateMetric(metric)}
                           className="cursor-pointer text-[13px] focus:bg-[#f9fafb]"
                         >
                           <Copy className="w-3.5 h-3.5 mr-2" />
@@ -287,7 +238,7 @@ export function Products() {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => handleDeleteProduct(product)}
+                          onClick={() => handleDeleteMetric(metric)}
                           className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer text-[13px]"
                         >
                           <Trash2 className="w-3.5 h-3.5 mr-2" />
@@ -305,25 +256,54 @@ export function Products() {
         </div>
       </div>
 
-      {/* Drawers */}
+      {/* View Drawer */}
       {drawer.type === 'view' && (
-        <ViewProductDrawer
-          product={drawer.product}
+        <ViewMetricDrawer
+          metric={drawer.metric}
           onClose={handleCloseDrawer}
-          onEdit={handleViewToEdit}
+          onEdit={(m) => setDrawer({ type: 'edit', metric: m })}
         />
       )}
 
+      {/* Form Drawer */}
       {(drawer.type === 'add' || drawer.type === 'edit' || drawer.type === 'duplicate') && (
-        <ProductFormDrawer
+        <MetricFormDrawer
           mode={drawer.type}
-          product={drawer.type !== 'add' ? drawer.product : null}
+          metric={drawer.type !== 'add' ? drawer.metric : null}
           onClose={handleCloseDrawer}
-          onSave={handleSaveProduct}
-          onDelete={(p) => { handleDeleteProduct(p); handleCloseDrawer(); }}
+          onSave={handleSaveMetric}
+          onDelete={(m) => { handleDeleteMetric(m); handleCloseDrawer(); }}
         />
       )}
     </div>
+  );
+}
+
+// ─── Inline Badges ───────────────────────────────────────
+
+function TypeBadge({ type }: { type: string }) {
+  const styles: Record<string, string> = {
+    Financial: 'bg-blue-50 text-blue-700',
+    Operational: 'bg-amber-50 text-amber-700',
+    Custom: 'bg-purple-50 text-purple-700',
+  };
+  return (
+    <span className={`px-1.5 py-0.5 rounded text-[11px] font-medium ${styles[type] || 'bg-gray-100 text-gray-600'}`}>
+      {type}
+    </span>
+  );
+}
+
+function SourceBadge({ source }: { source: string }) {
+  const styles: Record<string, string> = {
+    CRM: 'bg-emerald-50 text-emerald-700',
+    Manual: 'bg-gray-100 text-gray-600',
+    Calculated: 'bg-indigo-50 text-indigo-700',
+  };
+  return (
+    <span className={`px-1.5 py-0.5 rounded text-[11px] font-medium ${styles[source] || 'bg-gray-100 text-gray-600'}`}>
+      {source}
+    </span>
   );
 }
 

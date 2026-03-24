@@ -68,6 +68,23 @@ export function updateUser(id: number, data: Partial<Omit<User, 'id'>>): User {
   return users[idx];
 }
 
+export function bulkAddUsers(incoming: Omit<User, 'id'>[]): User[] {
+  const users = listUsers();
+  let nextId = users.reduce((max, u) => Math.max(max, u.id), 0) + 1;
+  for (const entry of incoming) {
+    const duplicate = users.find(
+      u => u.name === entry.name && u.slackId === entry.slackId,
+    );
+    if (duplicate) {
+      Object.assign(duplicate, entry);
+    } else {
+      users.push({ ...entry, id: nextId++ });
+    }
+  }
+  saveAll(users);
+  return users;
+}
+
 export function getManagerOptions(users: User[]): string[] {
   const managers = new Set<string>();
   for (const u of users) {

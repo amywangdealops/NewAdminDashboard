@@ -4,7 +4,7 @@ import { useParams, useLocation } from 'react-router';
 import { CreateTriggerModal } from './CreateTriggerModal';
 import { ViewTriggerModal } from './ViewTriggerModal';
 import { ViewTriggerDrawer } from './ViewTriggerDrawer';
-import { getSavedTriggers, deleteTrigger, StoredTrigger, HARDCODED_TRIGGERS } from './triggerStore';
+import { getSavedTriggers, deleteTrigger, StoredTrigger, getAllTriggers } from './triggerStore';
 import { toast } from 'sonner';
 
 interface Trigger {
@@ -20,17 +20,30 @@ interface Trigger {
   createdAt?: string;
 }
 
+const TRIGGER_CATEGORIES = [
+  'All', 'Product Discounts', 'Products', 'Billing Frequency', 'Payment Terms', 'Subscription Terms',
+] as const;
+
 const CATEGORY_LABELS: Record<string, string> = {
-  pricing: "Product Discounts",
-  terms: "Commercial Terms",
-  custom: "Custom Triggers"
+  'Product Discounts': 'Product Discounts',
+  'Products': 'Products',
+  'Billing Frequency': 'Billing Frequency',
+  'Payment Terms': 'Payment Terms',
+  'Subscription Terms': 'Subscription Terms',
+  // Legacy keys for any previously saved triggers
+  pricing: 'Product Discounts',
+  terms: 'Subscription Terms',
+  custom: 'Products',
 };
 
 function triggerCategoryStyle(cat: string) {
-  switch (cat) {
-    case 'pricing': return 'bg-[#5d7f8e]/10 text-[#5d7f8e]';
-    case 'terms': return 'bg-[#8a7a68]/10 text-[#8a7a68]';
-    case 'custom': return 'bg-[#1a1a1a]/[0.06] text-[#555]';
+  const label = CATEGORY_LABELS[cat] || cat;
+  switch (label) {
+    case 'Product Discounts': return 'bg-[#5a7d63]/10 text-[#5a7d63]';
+    case 'Products': return 'bg-[#1a1a1a]/[0.06] text-[#555]';
+    case 'Billing Frequency': return 'bg-[#5d7f8e]/10 text-[#5d7f8e]';
+    case 'Payment Terms': return 'bg-[#8a7a68]/10 text-[#8a7a68]';
+    case 'Subscription Terms': return 'bg-[#1a1a1a]/[0.06] text-[#555]';
     default: return 'bg-[#f0efe9] text-[#666]';
   }
 }
@@ -96,21 +109,20 @@ export function ApprovalTriggers() {
     loadSaved();
   };
 
-  const triggers: Trigger[] = useMemo(() => [
-    ...HARDCODED_TRIGGERS.map((ht) => ({ ...ht })),
-    ...savedTriggers.map((st) => ({
-      id: st.id,
-      name: st.name,
-      when: st.when,
-      then: st.then,
-      scope: st.scope,
-      status: st.status,
-      impact: st.impact,
-      category: st.category,
-      fromTemplate: st.fromTemplate,
-      createdAt: st.createdAt,
+  const triggers: Trigger[] = useMemo(() =>
+    getAllTriggers().map(t => ({
+      id: t.id,
+      name: t.name,
+      when: t.when,
+      then: t.then,
+      scope: t.scope,
+      status: t.status,
+      impact: t.impact,
+      category: t.category,
+      fromTemplate: t.fromTemplate,
+      createdAt: t.createdAt,
     })),
-  ], [savedTriggers]);
+  [savedTriggers]);
 
   useEffect(() => {
     const state = location.state as { filterGroup?: string } | null;
@@ -119,7 +131,7 @@ export function ApprovalTriggers() {
     }
   }, [location.state]);
 
-  const categories = ['All', ...Object.values(CATEGORY_LABELS)];
+  const categories = TRIGGER_CATEGORIES;
   const uniqueCategories = new Set(triggers.map(t => t.category)).size;
 
   const triggerFilterCount = [statusFilter, scopeFilter, approverFilter].filter(Boolean).length;
@@ -205,29 +217,29 @@ export function ApprovalTriggers() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <header className="border-b border-[#e2e0d8] bg-white px-6 py-3.5">
-        <div className="flex items-center justify-between gap-4">
+      <header className="border-b border-[#e2e0d8] bg-white px-4 py-2">
+        <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-[15px] font-semibold text-[#1a1a1a] tracking-tight">Approval Triggers</h1>
-            <p className="text-[#999891] text-[11px] mt-0.5">
+            <h1 className="text-[13px] font-semibold text-[#1a1a1a] tracking-tight">Approval Triggers</h1>
+            <p className="text-[#999891] text-[10px]">
               {triggers.length} rules across {uniqueCategories} categories
             </p>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#999891]" />
+              <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-[#999891]" />
               <input
                 type="text"
                 placeholder="Search triggers..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-48 h-8 pl-8 pr-3 bg-[#f5f6f8] border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] focus:bg-white text-[12px] transition-all placeholder:text-[#999891]"
+                className="w-40 h-6 pl-6 pr-2 bg-[#f5f6f8] border border-transparent rounded focus:outline-none focus:ring-1 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] focus:bg-white text-[11px] transition-all placeholder:text-[#999891]"
                 aria-label="Search triggers"
               />
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`h-8 px-2.5 border rounded-md hover:bg-[#f9fafb] inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 ${
+              className={`h-6 px-2 border rounded hover:bg-[#f9fafb] inline-flex items-center gap-1 text-[11px] font-medium transition-colors whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-1 focus:ring-[#1a1a1a]/20 ${
                 triggerFilterCount > 0
                   ? 'border-[#1a1a1a] bg-[#1a1a1a]/5 text-[#1a1a1a]'
                   : 'border-[#e2e0d8] text-[#333333]'
@@ -235,18 +247,18 @@ export function ApprovalTriggers() {
               aria-label="Filter triggers"
               aria-expanded={showFilters}
             >
-              <Filter className={`w-3.5 h-3.5 ${triggerFilterCount > 0 ? 'text-[#1a1a1a]' : 'text-[#999891]'}`} />
+              <Filter className={`w-3 h-3 ${triggerFilterCount > 0 ? 'text-[#1a1a1a]' : 'text-[#999891]'}`} />
               Filters
               {triggerFilterCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-[#1a1a1a] text-white text-[10px] flex items-center justify-center">{triggerFilterCount}</span>
+                <span className="w-3.5 h-3.5 rounded-full bg-[#1a1a1a] text-white text-[9px] flex items-center justify-center">{triggerFilterCount}</span>
               )}
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="h-8 px-3 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] inline-flex items-center gap-1.5 text-[12px] font-medium transition-all shadow-sm whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 active:scale-[0.98]"
+              className="h-6 px-2.5 bg-[#1a1a1a] text-white rounded hover:bg-[#333333] inline-flex items-center gap-1 text-[11px] font-medium transition-all shadow-sm whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-1 focus:ring-[#1a1a1a]/20 active:scale-[0.98]"
               aria-label="Add new trigger"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3 h-3" />
               Add Trigger
             </button>
           </div>
@@ -254,12 +266,12 @@ export function ApprovalTriggers() {
 
         {/* Category tabs */}
         {!category && (
-          <div className="flex items-center gap-0.5 mt-2.5 border-b border-transparent -mb-[1px]">
+          <div className="flex items-center gap-0.5 mt-1.5 border-b border-transparent -mb-[1px]">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-3 py-1.5 text-[11px] font-medium transition-colors border-b-2 ${
+                className={`px-2.5 py-1 text-[10px] font-medium transition-colors border-b-2 ${
                   activeCategory === cat
                     ? 'border-[#1a1a1a] text-[#1a1a1a]'
                     : 'border-transparent text-[#999891] hover:text-[#666]'
@@ -274,14 +286,14 @@ export function ApprovalTriggers() {
 
       {/* Filter Bar */}
       {showFilters && (
-        <div className="border-b border-[#e2e0d8] bg-[#f9fafb] px-6 py-2.5">
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="border-b border-[#e2e0d8] bg-[#f9fafb] px-4 py-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <TriggerFilterSelect label="Status" value={statusFilter} options={[{ value: 'active', label: 'Active' }, { value: 'paused', label: 'Paused' }]} onChange={setStatusFilter} />
             <TriggerFilterSelect label="Scope" value={scopeFilter} options={allScopes.map(s => ({ value: s, label: s }))} onChange={setScopeFilter} />
             <TriggerFilterSelect label="Approver" value={approverFilter} options={allApprovers.map(a => ({ value: a, label: a }))} onChange={setApproverFilter} />
             {triggerFilterCount > 0 && (
-              <button onClick={clearTriggerFilters} className="h-7 px-2 text-[11px] text-[#999891] hover:text-[#333333] inline-flex items-center gap-1 transition-colors">
-                <X className="w-3 h-3" />
+              <button onClick={clearTriggerFilters} className="h-5 px-1.5 text-[10px] text-[#999891] hover:text-[#333333] inline-flex items-center gap-0.5 transition-colors">
+                <X className="w-2.5 h-2.5" />
                 Clear all
               </button>
             )}
@@ -290,7 +302,7 @@ export function ApprovalTriggers() {
       )}
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-4">
         {groupFilter && (
           <div className="flex items-center justify-between mb-3">
             <span className="text-[11px] text-[#999891]">
@@ -331,17 +343,16 @@ export function ApprovalTriggers() {
 
             <div className="bg-white rounded-lg border border-[#e2e0d8] overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[800px]">
+                <table className="w-full table-fixed">
                   <thead className="bg-[#f9fafb] border-b border-[#e2e0d8]">
                     <tr>
-                      <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Name</th>
-                      <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Condition</th>
-                      <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Approvers</th>
-                      <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Scope</th>
-                      <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Category</th>
-                      <th className="text-left px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Status</th>
-                      <th className="text-right px-4 py-2.5 text-[11px] font-semibold text-[#666666] uppercase tracking-wider">Impact</th>
-                      <th className="px-4 py-2.5 w-10"></th>
+                      <th className="text-left px-3 py-1.5 text-[10px] font-semibold text-[#666666] uppercase tracking-wider w-[20%]">Name</th>
+                      <th className="text-left px-3 py-1.5 text-[10px] font-semibold text-[#666666] uppercase tracking-wider w-[24%]">Condition</th>
+                      <th className="text-left px-3 py-1.5 text-[10px] font-semibold text-[#666666] uppercase tracking-wider w-[15%]">Approvers</th>
+                      <th className="text-left px-3 py-1.5 text-[10px] font-semibold text-[#666666] uppercase tracking-wider w-[12%]">Scope</th>
+                      <th className="text-left px-3 py-1.5 text-[10px] font-semibold text-[#666666] uppercase tracking-wider w-[13%]">Category</th>
+                      <th className="text-left px-3 py-1.5 text-[10px] font-semibold text-[#666666] uppercase tracking-wider w-[7%]">Status</th>
+                      <th className="text-right px-3 py-1.5 text-[10px] font-semibold text-[#666666] uppercase tracking-wider w-[9%]">Impact</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#f0f1f4]">
@@ -351,52 +362,56 @@ export function ApprovalTriggers() {
                         onClick={() => handleTriggerClick(trigger)}
                         className="hover:bg-[#f9fafb] transition-colors cursor-pointer group"
                       >
-                        <td className="px-4 py-2.5">
-                          <ExpandCell className="text-[13px] font-medium text-[#1a1a1a]">
+                        <td className="px-3 py-1.5">
+                          <ExpandCell className="text-[11px] font-medium text-[#1a1a1a]">
                             {trigger.name}
                           </ExpandCell>
                           {trigger.fromTemplate && (
-                            <span className="inline-flex items-center gap-0.5 mt-0.5 text-[10px] font-medium text-[#999891]">
-                              <Layers className="w-2.5 h-2.5" />
+                            <span className="inline-flex items-center gap-0.5 text-[9px] font-medium text-[#999891]">
+                              <Layers className="w-2 h-2" />
                               Template
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-2.5">
-                          <ExpandCell className="text-[13px] text-[#666666]">
+                        <td className="px-3 py-1.5">
+                          <ExpandCell className="text-[11px] text-[#666666]">
                             <StyledCondition text={trigger.when} />
                           </ExpandCell>
                         </td>
-                        <td className="px-4 py-2.5">
-                          <ExpandCell className="text-[13px] text-[#666666]">
+                        <td className="px-3 py-1.5">
+                          <ExpandCell className="text-[11px] text-[#666666]">
                             {trigger.then.join(' \u2192 ')}
                           </ExpandCell>
                         </td>
-                        <td className="px-4 py-2.5">
-                          <ExpandCell className="text-[13px] text-[#666666]">
-                            {trigger.scope.length > 0 ? trigger.scope.join(', ') : '\u2014'}
-                          </ExpandCell>
+                        <td className="px-3 py-1.5">
+                          <div className="flex flex-wrap gap-0.5">
+                            {trigger.scope.length > 0
+                              ? trigger.scope.map(s => (
+                                <span key={s} className="text-[9px] font-medium bg-[#f0efe9] text-[#666] px-1 py-px rounded">
+                                  {s}
+                                </span>
+                              ))
+                              : <span className="text-[11px] text-[#999891]">&mdash;</span>
+                            }
+                          </div>
                         </td>
-                        <td className="px-4 py-2.5">
-                          <span className={`text-[11px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded whitespace-nowrap ${triggerCategoryStyle(trigger.category)}`}>
+                        <td className="px-3 py-1.5">
+                          <span className={`text-[9px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded whitespace-nowrap ${triggerCategoryStyle(trigger.category)}`}>
                             {CATEGORY_LABELS[trigger.category] || trigger.category}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5">
-                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium whitespace-nowrap ${
+                        <td className="px-3 py-1.5">
+                          <span className={`inline-flex items-center gap-0.5 px-1 py-px rounded text-[10px] font-medium whitespace-nowrap ${
                             trigger.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
                           }`}>
                             <span className={`w-1 h-1 rounded-full flex-shrink-0 ${trigger.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                             {trigger.status === 'active' ? 'Active' : 'Paused'}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 text-right whitespace-nowrap">
-                          <span className="text-[13px] text-[#999891] tabular-nums">
-                            {trigger.impact.deals} deals &middot; {trigger.impact.avgTime}
+                        <td className="px-3 py-1.5 text-right whitespace-nowrap">
+                          <span className="text-[10px] text-[#999891] tabular-nums">
+                            {trigger.impact.deals}d &middot; {trigger.impact.avgTime}
                           </span>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <Eye className="w-3.5 h-3.5 text-[#ccc] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                         </td>
                       </tr>
                     ))}
@@ -477,7 +492,7 @@ function TriggerFilterSelect({ label, value, options, onChange }: {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`h-7 pl-2 pr-6 border rounded-md text-[11px] font-medium transition-colors appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 ${
+        className={`h-5 pl-1.5 pr-5 border rounded text-[10px] font-medium transition-colors appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#1a1a1a]/20 ${
           value
             ? 'bg-[#1a1a1a] text-white border-[#1a1a1a]'
             : 'bg-white text-[#666666] border-[#e2e0d8] hover:border-[#1a1a1a]/30'
@@ -488,7 +503,7 @@ function TriggerFilterSelect({ label, value, options, onChange }: {
           <option key={opt.value} value={opt.value}>{opt.label}</option>
         ))}
       </select>
-      <svg className={`w-3 h-3 absolute right-1.5 pointer-events-none ${value ? 'text-white' : 'text-[#999891]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className={`w-2.5 h-2.5 absolute right-1 pointer-events-none ${value ? 'text-white' : 'text-[#999891]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
       </svg>
     </div>

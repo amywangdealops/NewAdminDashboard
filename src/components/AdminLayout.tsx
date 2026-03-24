@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useLocation } from 'react-router';
-import { Package, FileText, Shield, Users, Layers, BarChart3, HelpCircle, Menu, X, ExternalLink, UserCircle, Database } from 'lucide-react';
+import { Package, FileText, Shield, Users, BarChart3, HelpCircle, Menu, X, ExternalLink, UserCircle, Database, DollarSign } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useIsMobile } from './ui/use-mobile';
 
@@ -37,6 +37,7 @@ export function AdminLayout() {
       items: [
         { path: "/", label: "Products", icon: Package },
         { path: "/terms", label: "Terms Library", icon: FileText },
+        { path: "/metrics", label: "Metrics", icon: DollarSign },
       ],
     },
     {
@@ -47,13 +48,10 @@ export function AdminLayout() {
           label: "Triggers",
           icon: Shield,
           subnav: [
-            { path: "/triggers/pricing", label: "Discounts" },
-            { path: "/triggers/terms", label: "Commercial" },
-            { path: "/triggers/custom", label: "Custom" },
+            { path: "/templates", label: "Templates" },
           ]
         },
         { path: "/approvers", label: "Approvers", icon: Users },
-        { path: "/templates", label: "Templates", icon: Layers },
       ],
     },
     {
@@ -113,7 +111,8 @@ export function AdminLayout() {
                 const Icon = item.icon;
                 const isActive = item.path === "/"
                   ? location.pathname === "/"
-                  : location.pathname.startsWith(item.path);
+                  : location.pathname.startsWith(item.path) ||
+                    (item.subnav?.some(sub => location.pathname.startsWith(sub.path)) ?? false);
 
                 return (
                   <div key={item.path}>

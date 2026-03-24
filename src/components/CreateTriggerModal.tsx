@@ -53,8 +53,11 @@ const KNOWN_APPROVERS = [
   'Product Team', 'Engineering', 'CFO', 'CRO', 'RevOps',
 ];
 
-const KNOWN_SEGMENTS = [
-  'All segments', 'Enterprise', 'Mid-Market', 'SMB', 'Majors', 'EMEA', 'US', 'APAC',
+const SCOPE_CATEGORIES: { label: string; items: string[] }[] = [
+  { label: 'Segment', items: ['Enterprise', 'Mid-Market', 'SMB'] },
+  { label: 'Region', items: ['US', 'EMEA', 'APAC', 'LATAM'] },
+  { label: 'Customer Type', items: ['New Customer', 'Existing Customer'] },
+  { label: 'Deal Type', items: ['New Business', 'Amendment', 'Renewal'] },
 ];
 
 const CATEGORY_OPTIONS: { value: string; label: string }[] = [
@@ -107,8 +110,6 @@ function BuilderMode({
   const [approverInput, setApproverInput] = useState('');
   const [showApproverSuggestions, setShowApproverSuggestions] = useState(false);
   const [segments, setSegments] = useState<string[]>([]);
-  const [segmentInput, setSegmentInput] = useState('');
-  const [showSegmentSuggestions, setShowSegmentSuggestions] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const addCondition = () => {
@@ -144,23 +145,8 @@ function BuilderMode({
 
   const removeApprover = (idx: number) => setApprovers(prev => prev.filter((_, i) => i !== idx));
 
-  const addSegment = (val: string) => {
-    const trimmed = val.trim();
-    if (trimmed && !segments.includes(trimmed)) {
-      setSegments(prev => [...prev, trimmed]);
-    }
-    setSegmentInput('');
-    setShowSegmentSuggestions(false);
-  };
-
-  const removeSegment = (idx: number) => setSegments(prev => prev.filter((_, i) => i !== idx));
-
   const filteredApproverSuggestions = KNOWN_APPROVERS.filter(
     a => !approvers.includes(a) && a.toLowerCase().includes(approverInput.toLowerCase())
-  );
-
-  const filteredSegmentSuggestions = KNOWN_SEGMENTS.filter(
-    s => !segments.includes(s) && s.toLowerCase().includes(segmentInput.toLowerCase())
   );
 
   const validConditions = conditions.filter(c => c.field && c.operator && c.value);
@@ -367,51 +353,7 @@ function BuilderMode({
               <label className="block text-[11px] font-semibold text-[#666666] uppercase tracking-wider mb-3">
                 Scope (Segments)
               </label>
-              {segments.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-2.5">
-                  {segments.map((s, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#f5f6f8] border border-[#e2e0d8] rounded-md text-[11px] text-[#1a1a1a] font-medium"
-                    >
-                      {s}
-                      <button onClick={() => removeSegment(idx)} className="hover:text-red-600 transition-colors">
-                        <X className="w-2.5 h-2.5" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              <div className="relative">
-                <input
-                  type="text"
-                  value={segmentInput}
-                  onChange={(e) => { setSegmentInput(e.target.value); setShowSegmentSuggestions(true); }}
-                  onFocus={() => setShowSegmentSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSegmentSuggestions(false), 150)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && segmentInput.trim()) {
-                      e.preventDefault();
-                      addSegment(segmentInput);
-                    }
-                  }}
-                  placeholder={segments.length === 0 ? 'All segments (leave empty for all)' : 'Add another segment...'}
-                  className="w-full h-8 px-2.5 border border-[#e2e0d8] rounded-md bg-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] transition-colors placeholder:text-[#999891]"
-                />
-                {showSegmentSuggestions && filteredSegmentSuggestions.length > 0 && (
-                  <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[#e2e0d8] rounded-md shadow-lg max-h-40 overflow-y-auto">
-                    {filteredSegmentSuggestions.map(s => (
-                      <button
-                        key={s}
-                        onMouseDown={(e) => { e.preventDefault(); addSegment(s); }}
-                        className="w-full text-left px-2.5 py-1.5 text-[12px] text-[#1a1a1a] hover:bg-[#f9fafb] transition-colors"
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <ScopePicker selected={segments} onChange={setSegments} />
             </div>
 
             {/* ── LIVE PREVIEW ────────────────────────────── */}
@@ -567,6 +509,77 @@ function ConditionRow({
   );
 }
 
+// ─── SCOPE PICKER ───────────────────────────────────────
+function ScopePicker({ selected, onChange }: { selected: string[]; onChange: (s: string[]) => void }) {
+  const [openCat, setOpenCat] = useState<string | null>(null);
+
+  const toggle = (item: string) => {
+    onChange(selected.includes(item) ? selected.filter(s => s !== item) : [...selected, item]);
+  };
+
+  return (
+    <div className="space-y-2">
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-1">
+          {selected.map(s => (
+            <span key={s} className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#f5f6f8] border border-[#e2e0d8] rounded-md text-[11px] text-[#1a1a1a] font-medium">
+              {s}
+              <button onClick={() => toggle(s)} className="hover:text-red-600 transition-colors"><X className="w-2.5 h-2.5" /></button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="space-y-1.5">
+        {SCOPE_CATEGORIES.map(cat => {
+          const isOpen = openCat === cat.label;
+          const selectedInCat = cat.items.filter(i => selected.includes(i));
+          return (
+            <div key={cat.label} className="border border-[#e2e0d8] rounded-md overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setOpenCat(isOpen ? null : cat.label)}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 bg-[#f9fafb] hover:bg-[#f0f1f4] transition-colors text-left"
+              >
+                <span className="text-[11px] font-medium text-[#1a1a1a]">
+                  {cat.label}
+                  {selectedInCat.length > 0 && (
+                    <span className="ml-1.5 text-[10px] text-[#999891]">({selectedInCat.length})</span>
+                  )}
+                </span>
+                <ChevronDown className={`w-3 h-3 text-[#999891] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isOpen && (
+                <div className="px-2.5 py-2 flex flex-wrap gap-1.5 border-t border-[#f0f1f4]">
+                  {cat.items.map(item => {
+                    const active = selected.includes(item);
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => toggle(item)}
+                        className={`h-6 px-2 rounded text-[11px] font-medium transition-all ${
+                          active
+                            ? 'bg-[#1a1a1a] text-white'
+                            : 'bg-[#f5f6f8] text-[#666] border border-[#e2e0d8] hover:border-[#1a1a1a]/30'
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {selected.length === 0 && (
+        <p className="text-[10px] text-[#999891]">No scope selected — applies to all segments.</p>
+      )}
+    </div>
+  );
+}
+
 // ─── TEMPLATE REVIEW / EDIT MODE ───────────────────────
 function TemplateReviewMode({
   prefill,
@@ -583,13 +596,10 @@ function TemplateReviewMode({
   const [segments, setSegments] = useState<string[]>(prefill.segments);
   const [category, setCategory] = useState(prefill.category);
   const [approverInput, setApproverInput] = useState('');
-  const [segmentInput, setSegmentInput] = useState('');
   const [showApproverSuggestions, setShowApproverSuggestions] = useState(false);
-  const [showSegmentSuggestions, setShowSegmentSuggestions] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const removeApprover = (idx: number) => setApprovers(prev => prev.filter((_, i) => i !== idx));
-  const removeSegment = (idx: number) => setSegments(prev => prev.filter((_, i) => i !== idx));
 
   const addApprover = (val: string) => {
     const trimmed = val.trim();
@@ -600,21 +610,8 @@ function TemplateReviewMode({
     setShowApproverSuggestions(false);
   };
 
-  const addSegment = (val: string) => {
-    const trimmed = val.trim();
-    if (trimmed && !segments.includes(trimmed)) {
-      setSegments(prev => [...prev, trimmed]);
-    }
-    setSegmentInput('');
-    setShowSegmentSuggestions(false);
-  };
-
   const filteredApproverSuggestions = KNOWN_APPROVERS.filter(
     a => !approvers.includes(a) && a.toLowerCase().includes(approverInput.toLowerCase())
-  );
-
-  const filteredSegmentSuggestions = KNOWN_SEGMENTS.filter(
-    s => !segments.includes(s) && s.toLowerCase().includes(segmentInput.toLowerCase())
   );
 
   const handleSave = async () => {
@@ -764,51 +761,7 @@ function TemplateReviewMode({
             {/* Segments */}
             <div>
               <label className="block text-[11px] font-semibold text-[#666666] uppercase tracking-wider mb-2.5">Scope</label>
-              {segments.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-2.5">
-                  {segments.map((s, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#f5f6f8] border border-[#e2e0d8] rounded-md text-[11px] text-[#1a1a1a] font-medium"
-                    >
-                      {s}
-                      <button onClick={() => removeSegment(idx)} className="hover:text-red-600 transition-colors">
-                        <X className="w-2.5 h-2.5" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              <div className="relative">
-                <input
-                  type="text"
-                  value={segmentInput}
-                  onChange={(e) => { setSegmentInput(e.target.value); setShowSegmentSuggestions(true); }}
-                  onFocus={() => setShowSegmentSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSegmentSuggestions(false), 150)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && segmentInput.trim()) {
-                      e.preventDefault();
-                      addSegment(segmentInput);
-                    }
-                  }}
-                  placeholder="Add segment..."
-                  className="w-full h-8 px-2.5 border border-[#e2e0d8] rounded-md bg-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] transition-colors placeholder:text-[#999891]"
-                />
-                {showSegmentSuggestions && filteredSegmentSuggestions.length > 0 && (
-                  <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[#e2e0d8] rounded-md shadow-lg max-h-40 overflow-y-auto">
-                    {filteredSegmentSuggestions.map(s => (
-                      <button
-                        key={s}
-                        onMouseDown={(e) => { e.preventDefault(); addSegment(s); }}
-                        className="w-full text-left px-2.5 py-1.5 text-[12px] text-[#1a1a1a] hover:bg-[#f9fafb] transition-colors"
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <ScopePicker selected={segments} onChange={setSegments} />
             </div>
 
             <hr className="border-[#e2e0d8]" />

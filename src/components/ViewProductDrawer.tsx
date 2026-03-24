@@ -1,4 +1,4 @@
-import { X, Edit, Package, ChevronDown, ChevronRight, Info } from 'lucide-react';
+import { X, Edit, Package, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import type { Product } from './productStore';
 
@@ -71,11 +71,6 @@ export function ViewProductDrawer({ product, onClose, onEdit }: ViewProductDrawe
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-medium text-[#1a1a1a] tabular-nums">{formatPrice(product.price)}</span>
                     <span className="text-[11px] text-[#999891]">{product.currency}</span>
-                    {product.priceSource === 'salesforce' && (
-                      <span className="text-[11px] text-emerald-600 flex items-center gap-1">
-                        <Info className="w-3 h-3" /> From Salesforce
-                      </span>
-                    )}
                   </div>
                 </ReadOnlyField>
                 <ReadOnlyField label="Billing Frequency" value={product.billingFrequency} />

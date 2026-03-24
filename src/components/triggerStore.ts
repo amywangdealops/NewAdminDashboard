@@ -35,7 +35,7 @@ export const HARDCODED_TRIGGERS: TriggerData[] = [
     scope: ["Enterprise", "US"],
     status: "active",
     impact: { deals: 234, avgTime: "2.3h" },
-    category: "pricing",
+    category: "Product Discounts",
   },
   {
     id: 2,
@@ -45,7 +45,7 @@ export const HARDCODED_TRIGGERS: TriggerData[] = [
     scope: ["Enterprise", "EMEA"],
     status: "active",
     impact: { deals: 156, avgTime: "4.1h" },
-    category: "terms",
+    category: "Payment Terms",
   },
   {
     id: 3,
@@ -55,7 +55,7 @@ export const HARDCODED_TRIGGERS: TriggerData[] = [
     scope: ["All segments"],
     status: "active",
     impact: { deals: 89, avgTime: "1.8h" },
-    category: "terms",
+    category: "Subscription Terms",
   },
   {
     id: 4,
@@ -65,7 +65,7 @@ export const HARDCODED_TRIGGERS: TriggerData[] = [
     scope: ["Enterprise"],
     status: "active",
     impact: { deals: 45, avgTime: "6.2h" },
-    category: "custom",
+    category: "Products",
   },
   {
     id: 5,
@@ -75,7 +75,7 @@ export const HARDCODED_TRIGGERS: TriggerData[] = [
     scope: ["Enterprise", "Mid-Market"],
     status: "active",
     impact: { deals: 18, avgTime: "8.1h" },
-    category: "pricing",
+    category: "Product Discounts",
   },
   {
     id: 6,
@@ -85,7 +85,7 @@ export const HARDCODED_TRIGGERS: TriggerData[] = [
     scope: ["All segments"],
     status: "active",
     impact: { deals: 112, avgTime: "3.5h" },
-    category: "terms",
+    category: "Subscription Terms",
   },
   {
     id: 7,
@@ -95,7 +95,7 @@ export const HARDCODED_TRIGGERS: TriggerData[] = [
     scope: ["Mid-Market"],
     status: "paused",
     impact: { deals: 67, avgTime: "1.2h" },
-    category: "terms",
+    category: "Billing Frequency",
   },
 ];
 
@@ -110,9 +110,95 @@ export function getSavedTriggers(): StoredTrigger[] {
   }
 }
 
+// --- Override system: propagate palette edits to triggers ---
+
+const CONDITION_OVERRIDES_KEY = 'condition_overrides';
+const APPROVER_OVERRIDES_KEY = 'approver_overrides';
+const SCOPE_OVERRIDES_KEY = 'scope_overrides';
+
+interface TextOverride { oldText: string; newText: string }
+
+function getOverrides(key: string): TextOverride[] {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : [];
+  } catch { return []; }
+}
+
+function applyTextOverrides(text: string, overrides: TextOverride[]): string {
+  let result = text;
+  for (const o of overrides) result = result.replaceAll(o.oldText, o.newText);
+  return result;
+}
+
+function applyArrayOverrides(arr: string[], overrides: TextOverride[]): string[] {
+  return arr.map(item => {
+    for (const o of overrides) { if (item === o.oldText) return o.newText; }
+    return item;
+  });
+}
+
+function addOverride(key: string, oldText: string, newText: string) {
+  const overrides = getOverrides(key);
+  const existing = overrides.find(o => o.newText === oldText);
+  if (existing) existing.newText = newText;
+  else overrides.push({ oldText, newText });
+  localStorage.setItem(key, JSON.stringify(overrides));
+}
+
+export function updateConditionText(oldText: string, newText: string): void {
+  if (oldText === newText) return;
+  const saved = getSavedTriggers();
+  let changed = false;
+  for (const t of saved) {
+    if (t.when.includes(oldText)) {
+      t.when = t.when.replaceAll(oldText, newText);
+      t.name = t.name.replaceAll(oldText, newText);
+      changed = true;
+    }
+  }
+  if (changed) localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+  addOverride(CONDITION_OVERRIDES_KEY, oldText, newText);
+}
+
+export function updateApproverName(oldName: string, newName: string): void {
+  if (oldName === newName) return;
+  const saved = getSavedTriggers();
+  let changed = false;
+  for (const t of saved) {
+    const idx = t.then.indexOf(oldName);
+    if (idx >= 0) { t.then[idx] = newName; changed = true; }
+    if (t.name.includes(oldName)) { t.name = t.name.replaceAll(oldName, newName); changed = true; }
+  }
+  if (changed) localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+  addOverride(APPROVER_OVERRIDES_KEY, oldName, newName);
+}
+
+export function updateScopeName(oldName: string, newName: string): void {
+  if (oldName === newName) return;
+  const saved = getSavedTriggers();
+  let changed = false;
+  for (const t of saved) {
+    const idx = t.scope.indexOf(oldName);
+    if (idx >= 0) { t.scope[idx] = newName; changed = true; }
+  }
+  if (changed) localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+  addOverride(SCOPE_OVERRIDES_KEY, oldName, newName);
+}
+
 export function getAllTriggers(): TriggerData[] {
+  const condOv = getOverrides(CONDITION_OVERRIDES_KEY);
+  const apprOv = getOverrides(APPROVER_OVERRIDES_KEY);
+  const scopeOv = getOverrides(SCOPE_OVERRIDES_KEY);
+
   return [
-    ...HARDCODED_TRIGGERS,
+    ...HARDCODED_TRIGGERS.map(t => ({
+      ...t,
+      when: applyTextOverrides(t.when, condOv),
+      name: applyTextOverrides(applyTextOverrides(t.name, condOv), apprOv),
+      then: applyArrayOverrides(t.then, apprOv),
+      scope: applyArrayOverrides(t.scope, scopeOv),
+    })),
     ...getSavedTriggers().map((st) => ({
       id: st.id,
       name: st.name,
