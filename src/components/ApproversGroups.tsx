@@ -1,4 +1,4 @@
-import { Plus, Search, Filter, Users, Edit, Trash2, Eye, Copy, MoreVertical, X, Shield, Loader2 } from 'lucide-react';
+import { Plus, Search, Filter, Users, Edit, Trash2, Eye, Copy, MoreVertical, X, Shield, Loader2, Info } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
@@ -40,6 +40,9 @@ export function ApproversGroups() {
   const [viewingGroup, setViewingGroup] = useState<Group | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Group | null; direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' });
+  const [showFilters, setShowFilters] = useState(false);
+  const [sizeFilter, setSizeFilter] = useState<string>('');
+  const [usageFilter, setUsageFilter] = useState<string>('');
 
   const [groups, setGroups] = useState<Group[]>([
     { id: 1, name: "Deal Desk", members: ["Yi-an Zhang", "Spyri Karasavva"], requiredApprovals: 2, usedIn: 12 },
@@ -48,7 +51,24 @@ export function ApproversGroups() {
     { id: 4, name: "Legal Team", members: ["Ankitr Wadhina"], requiredApprovals: 1, usedIn: 4 },
   ]);
 
+  const groupFilterCount = [sizeFilter, usageFilter].filter(Boolean).length;
+
+  const clearGroupFilters = () => {
+    setSizeFilter('');
+    setUsageFilter('');
+  };
+
   const filteredGroups = groups.filter(group => {
+    // Size filter
+    if (sizeFilter === '1') { if (group.members.length !== 1) return false; }
+    else if (sizeFilter === '2-3') { if (group.members.length < 2 || group.members.length > 3) return false; }
+    else if (sizeFilter === '4+') { if (group.members.length < 4) return false; }
+
+    // Usage filter
+    if (usageFilter === 'unused') { if (group.usedIn > 0) return false; }
+    else if (usageFilter === '1-5') { if (group.usedIn < 1 || group.usedIn > 5) return false; }
+    else if (usageFilter === '6+') { if (group.usedIn < 6) return false; }
+
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     const groupNameMatch = group.name.toLowerCase().includes(query);
@@ -211,6 +231,22 @@ export function ApproversGroups() {
               />
             </div>
             <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`h-8 px-2.5 border rounded-md hover:bg-[#f9fafb] inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 ${
+                groupFilterCount > 0
+                  ? 'border-[#1a1a1a] bg-[#1a1a1a]/5 text-[#1a1a1a]'
+                  : 'border-[#e2e0d8] text-[#333333]'
+              }`}
+              aria-label="Filter groups"
+              aria-expanded={showFilters}
+            >
+              <Filter className={`w-3.5 h-3.5 ${groupFilterCount > 0 ? 'text-[#1a1a1a]' : 'text-[#999891]'}`} />
+              Filters
+              {groupFilterCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-[#1a1a1a] text-white text-[10px] flex items-center justify-center">{groupFilterCount}</span>
+              )}
+            </button>
+            <button
               onClick={handleAddGroup}
               disabled={isLoading}
               className="h-8 px-3 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5 text-[12px] font-medium transition-all shadow-sm whitespace-nowrap flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 active:scale-[0.98]"
@@ -222,6 +258,22 @@ export function ApproversGroups() {
           </div>
         </div>
       </header>
+
+      {/* Filter Bar */}
+      {showFilters && (
+        <div className="border-b border-[#e2e0d8] bg-[#f9fafb] px-6 py-2.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <GroupFilterSelect label="Group Size" value={sizeFilter} options={[{ value: '1', label: '1 member' }, { value: '2-3', label: '2-3 members' }, { value: '4+', label: '4+ members' }]} onChange={setSizeFilter} />
+            <GroupFilterSelect label="Usage" value={usageFilter} options={[{ value: 'unused', label: 'Unused' }, { value: '1-5', label: '1-5 triggers' }, { value: '6+', label: '6+ triggers' }]} onChange={setUsageFilter} />
+            {groupFilterCount > 0 && (
+              <button onClick={clearGroupFilters} className="h-7 px-2 text-[11px] text-[#999891] hover:text-[#333333] inline-flex items-center gap-1 transition-colors">
+                <X className="w-3 h-3" />
+                Clear all
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-auto p-6">
         {sortedGroups.length === 0 ? (
@@ -284,13 +336,48 @@ export function ApproversGroups() {
                         </button>
                       </td>
                       <td className="px-3 py-2.5 text-right">
-                        <button
-                          onClick={() => handleEditGroup(group)}
-                          className="p-1 rounded-md text-[#999891] hover:text-[#333333] hover:bg-[#f0efe9] transition-colors focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
-                          aria-label={`Edit ${group.name}`}
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className="p-1 rounded-md text-[#999891] hover:text-[#333333] hover:bg-[#f0efe9] transition-colors focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
+                              aria-label={`Actions for ${group.name}`}
+                              aria-haspopup="true"
+                            >
+                              <MoreVertical className="w-3.5 h-3.5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44 bg-white border border-[#e2e0d8] shadow-lg rounded-lg">
+                            <DropdownMenuItem
+                              onClick={() => handleViewDetails(group)}
+                              className="cursor-pointer text-[13px] focus:bg-[#f9fafb]"
+                            >
+                              <Eye className="w-3.5 h-3.5 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleEditGroup(group)}
+                              className="cursor-pointer text-[13px] focus:bg-[#f9fafb]"
+                            >
+                              <Edit className="w-3.5 h-3.5 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDuplicateGroup(group)}
+                              className="cursor-pointer text-[13px] focus:bg-[#f9fafb]"
+                            >
+                              <Copy className="w-3.5 h-3.5 mr-2" />
+                              Duplicate
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteGroup(group)}
+                              className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer text-[13px]"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   ))}
@@ -384,57 +471,59 @@ export function ApproversGroups() {
       </AlertDialog>
 
       {showViewDetails && viewingGroup && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-0 sm:p-4 backdrop-blur-[2px]">
-          <div className="bg-white w-full h-full sm:h-auto sm:max-h-[85vh] sm:max-w-lg sm:rounded-xl shadow-2xl overflow-auto">
-            <div className="sticky top-0 bg-white border-b border-[#e2e0d8] px-5 py-3.5 flex items-center justify-between">
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-0 sm:p-4 backdrop-blur-[2px]"
+          onClick={(e) => e.target === e.currentTarget && (() => { setShowViewDetails(false); setViewingGroup(null); })()}
+        >
+          <div className="bg-white w-full h-full sm:h-auto sm:max-h-[85vh] sm:max-w-md sm:rounded-xl shadow-2xl overflow-auto">
+            <div className="sticky top-0 bg-white border-b border-[#e2e0d8] px-5 py-3.5 flex items-center justify-between z-10">
               <div>
                 <h2 className="text-[15px] font-semibold text-[#1a1a1a]">Group Details</h2>
                 <p className="text-[12px] text-[#999891] mt-0.5">{viewingGroup.name}</p>
               </div>
               <button
-                onClick={() => {
-                  setShowViewDetails(false);
-                  setViewingGroup(null);
-                }}
-                className="p-1 hover:bg-[#f0efe9] rounded-md transition-colors"
+                onClick={() => { setShowViewDetails(false); setViewingGroup(null); }}
+                className="p-1.5 hover:bg-[#f0efe9] rounded-md transition-colors"
+                aria-label="Close"
               >
                 <X className="w-4 h-4 text-[#999891]" />
               </button>
             </div>
 
-            <div className="p-5 space-y-5">
+            <div className="p-5 space-y-4">
               <div>
                 <label className="block text-[12px] font-medium text-[#666666] mb-1">Group Name</label>
-                <p className="text-[14px] font-semibold text-[#1a1a1a]">{viewingGroup.name}</p>
+                <p className="text-[13px] font-medium text-[#1a1a1a]">{viewingGroup.name}</p>
               </div>
 
               <div>
-                <label className="block text-[12px] font-medium text-[#666666] mb-1.5">Members</label>
-                <div className="space-y-1.5">
+                <label className="block text-[12px] font-medium text-[#666666] mb-1.5">
+                  Members ({viewingGroup.members.length})
+                </label>
+                <div className="flex flex-wrap gap-1.5">
                   {viewingGroup.members.map((member, idx) => (
-                    <div key={idx} className="px-3 py-2 bg-[#f9fafb] border border-[#f0f1f4] rounded-md text-[13px] text-[#1a1a1a]">
+                    <span key={idx} className="inline-flex items-center px-2 py-1 bg-[#f0efe9] rounded text-[12px] text-[#333333]">
                       {member}
-                    </div>
+                    </span>
                   ))}
                 </div>
               </div>
 
               <div>
                 <label className="block text-[12px] font-medium text-[#666666] mb-1">Required Approvals</label>
-                <p className="text-[14px] text-[#1a1a1a]">{viewingGroup.requiredApprovals}</p>
+                <p className="text-[13px] text-[#1a1a1a] tabular-nums">
+                  {viewingGroup.requiredApprovals} of {viewingGroup.members.length}
+                </p>
                 <p className="text-[11px] text-[#999891] mt-0.5">
-                  {viewingGroup.requiredApprovals} of {viewingGroup.members.length} member{viewingGroup.members.length > 1 ? 's' : ''} must approve
+                  {viewingGroup.requiredApprovals} member{viewingGroup.requiredApprovals > 1 ? 's' : ''} must approve
                 </p>
               </div>
 
               <div>
                 <label className="block text-[12px] font-medium text-[#666666] mb-1">Usage</label>
-                <div className="flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-[#1a1a1a]" />
-                  <p className="text-[14px] text-[#1a1a1a]">
-                    Used in {viewingGroup.usedIn} trigger{viewingGroup.usedIn !== 1 ? 's' : ''}
-                  </p>
-                </div>
+                <p className="text-[13px] text-[#1a1a1a] tabular-nums">
+                  {viewingGroup.usedIn} trigger{viewingGroup.usedIn !== 1 ? 's' : ''}
+                </p>
                 {viewingGroup.usedIn > 0 && (
                   <button
                     onClick={() => {
@@ -442,9 +531,9 @@ export function ApproversGroups() {
                       setViewingGroup(null);
                       handleNavigateToTriggers(viewingGroup.name);
                     }}
-                    className="mt-1.5 text-[12px] text-[#1a1a1a] hover:text-[#333333] font-medium transition-colors"
+                    className="mt-1 text-[12px] text-[#1a1a1a] hover:text-[#333333] font-medium transition-colors underline underline-offset-2 decoration-[#e2e0d8] hover:decoration-[#999891]"
                   >
-                    View all triggers using this group →
+                    View triggers using this group
                   </button>
                 )}
               </div>
@@ -452,11 +541,8 @@ export function ApproversGroups() {
 
             <div className="sticky bottom-0 bg-white border-t border-[#e2e0d8] px-5 py-3 flex items-center justify-end gap-2">
               <button
-                onClick={() => {
-                  setShowViewDetails(false);
-                  setViewingGroup(null);
-                }}
-                className="h-8 px-3 border border-[#e2e0d8] rounded-md hover:bg-[#f9fafb] text-[#333333] text-[12px] font-medium transition-colors"
+                onClick={() => { setShowViewDetails(false); setViewingGroup(null); }}
+                className="h-8 px-3 border border-[#e2e0d8] rounded-md hover:bg-[#f0efe9] text-[#333333] text-[12px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
               >
                 Close
               </button>
@@ -465,7 +551,7 @@ export function ApproversGroups() {
                   setShowViewDetails(false);
                   handleEditGroup(viewingGroup);
                 }}
-                className="h-8 px-3 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] inline-flex items-center gap-1.5 text-[12px] font-medium transition-all shadow-sm active:scale-[0.98]"
+                className="h-8 px-3 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] inline-flex items-center gap-1.5 text-[12px] font-medium transition-all shadow-sm active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:ring-offset-1"
               >
                 <Edit className="w-3.5 h-3.5" />
                 Edit Group
@@ -474,6 +560,33 @@ export function ApproversGroups() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function GroupFilterSelect({ label, value, options, onChange }: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="relative inline-flex items-center">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`h-7 pl-2 pr-6 border rounded-md text-[11px] font-medium transition-colors appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 ${
+          value
+            ? 'bg-[#1a1a1a] text-white border-[#1a1a1a]'
+            : 'bg-white text-[#666666] border-[#e2e0d8] hover:border-[#1a1a1a]/30'
+        }`}
+      >
+        <option value="">{label}</option>
+        {options.map(opt => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+      <svg className={`w-3 h-3 absolute right-1.5 pointer-events-none ${value ? 'text-white' : 'text-[#999891]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
     </div>
   );
 }

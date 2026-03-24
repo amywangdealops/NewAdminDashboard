@@ -1,5 +1,5 @@
-import { X, ChevronRight, Check, Info, DollarSign, FileText, RefreshCw, Receipt, Settings, Users, Plus, Layers } from 'lucide-react';
-import { useState } from 'react';
+import { X, Check, Plus, Trash2, GripVertical, Layers, ChevronDown, Loader2 } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import { saveTrigger } from './triggerStore';
 import { toast } from 'sonner';
 
@@ -11,7 +11,7 @@ export interface TriggerPrefill {
   condition: string;
   approvers: string[];
   segments: string[];
-  category: string; // 'pricing' | 'terms' | 'custom'
+  category: string;
 }
 
 interface CreateTriggerModalProps {
@@ -20,13 +20,41 @@ interface CreateTriggerModalProps {
   prefill?: TriggerPrefill;
 }
 
+// ─── VARIABLES & OPERATORS ──────────────────────────────
+
+interface VariableDef {
+  field: string;
+  label: string;
+  type: 'number' | 'currency' | 'percent' | 'select' | 'boolean';
+  operators: string[];
+  options?: string[];
+  unit?: string;
+  placeholder?: string;
+}
+
+const TRIGGER_VARIABLES: VariableDef[] = [
+  { field: 'discount', label: 'Discount', type: 'percent', operators: ['>', '>=', '<', '<=', '=', '!='], placeholder: '20' },
+  { field: 'acv', label: 'ACV (Annual Contract Value)', type: 'currency', operators: ['>', '>=', '<', '<=', '=', '!='], placeholder: '500000' },
+  { field: 'deal_size', label: 'Total Deal Size', type: 'currency', operators: ['>', '>=', '<', '<=', '=', '!='], placeholder: '1000000' },
+  { field: 'contract_length', label: 'Contract Length (months)', type: 'number', operators: ['>', '>=', '<', '<=', '=', '!='], placeholder: '12' },
+  { field: 'payment_terms', label: 'Payment Terms', type: 'select', operators: ['=', '!='], options: ['Net 15', 'Net 30', 'Net 45', 'Net 60', 'Net 90', 'Upfront', 'Custom'] },
+  { field: 'billing_frequency', label: 'Billing Frequency', type: 'select', operators: ['=', '!='], options: ['Monthly', 'Quarterly', 'Semi-Annual', 'Annual'] },
+  { field: 'auto_renewal', label: 'Auto-Renewal', type: 'boolean', operators: ['='], options: ['On', 'Off'] },
+  { field: 'product_type', label: 'Product Type', type: 'select', operators: ['=', '!='], options: ['Standard', 'Custom', 'Add-on', 'Professional Services'] },
+  { field: 'region', label: 'Region', type: 'select', operators: ['=', '!='], options: ['US', 'EMEA', 'APAC', 'LATAM', 'Global'] },
+  { field: 'price_override', label: 'Price Override', type: 'boolean', operators: ['='], options: ['Yes', 'No'] },
+  { field: 'ramp_deal', label: 'Ramp Deal', type: 'boolean', operators: ['='], options: ['Yes', 'No'] },
+  { field: 'multi_year', label: 'Multi-Year Deal', type: 'boolean', operators: ['='], options: ['Yes', 'No'] },
+];
+
 const KNOWN_APPROVERS = [
   'Deal Desk', 'Deal Ops', 'Finance', 'VP of Sales', 'VP of Sales (EMEA)',
-  'Head of Mid-Market', 'Legal', 'Customer Success', 'Product Team', 'Engineering', 'CFO',
+  'Head of Mid-Market', 'Head of Sales', 'Legal', 'Customer Success',
+  'Product Team', 'Engineering', 'CFO', 'CRO', 'RevOps',
 ];
 
 const KNOWN_SEGMENTS = [
-  'All segments', 'Enterprise', 'Mid-Market', 'SMB', 'EMEA', 'US',
+  'All segments', 'Enterprise', 'Mid-Market', 'SMB', 'Majors', 'EMEA', 'US', 'APAC',
 ];
 
 const CATEGORY_OPTIONS: { value: string; label: string }[] = [
@@ -35,12 +63,508 @@ const CATEGORY_OPTIONS: { value: string; label: string }[] = [
   { value: 'custom', label: 'Custom Triggers' },
 ];
 
+interface Condition {
+  id: string;
+  field: string;
+  operator: string;
+  value: string;
+}
+
+function makeId() {
+  return Math.random().toString(36).slice(2, 9);
+}
+
+function formatCondition(c: Condition): string {
+  const v = TRIGGER_VARIABLES.find(tv => tv.field === c.field);
+  if (!v) return `${c.field} ${c.operator} ${c.value}`;
+  if (v.type === 'percent') return `${v.label} ${c.operator} ${c.value}%`;
+  if (v.type === 'currency') return `${v.label} ${c.operator} $${Number(c.value).toLocaleString()}`;
+  return `${v.label} ${c.operator} ${c.value}`;
+}
+
 // ─── MAIN COMPONENT ────────────────────────────────────
 export function CreateTriggerModal({ onClose, onSave, prefill }: CreateTriggerModalProps) {
   if (prefill) {
     return <TemplateReviewMode prefill={prefill} onClose={onClose} onSave={onSave} />;
   }
-  return <WizardMode onClose={onClose} onSave={onSave} />;
+  return <BuilderMode onClose={onClose} onSave={onSave} />;
+}
+
+// ─── FULL BUILDER MODE (replaces old wizard) ────────────
+function BuilderMode({
+  onClose,
+  onSave,
+}: {
+  onClose: () => void;
+  onSave?: () => void;
+}) {
+  const [triggerName, setTriggerName] = useState('');
+  const [category, setCategory] = useState('custom');
+  const [conditions, setConditions] = useState<Condition[]>([
+    { id: makeId(), field: '', operator: '', value: '' },
+  ]);
+  const [approvers, setApprovers] = useState<string[]>([]);
+  const [approverInput, setApproverInput] = useState('');
+  const [showApproverSuggestions, setShowApproverSuggestions] = useState(false);
+  const [segments, setSegments] = useState<string[]>([]);
+  const [segmentInput, setSegmentInput] = useState('');
+  const [showSegmentSuggestions, setShowSegmentSuggestions] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const addCondition = () => {
+    setConditions(prev => [...prev, { id: makeId(), field: '', operator: '', value: '' }]);
+  };
+
+  const removeCondition = (id: string) => {
+    if (conditions.length <= 1) return;
+    setConditions(prev => prev.filter(c => c.id !== id));
+  };
+
+  const updateCondition = (id: string, patch: Partial<Condition>) => {
+    setConditions(prev => prev.map(c => {
+      if (c.id !== id) return c;
+      const updated = { ...c, ...patch };
+      if (patch.field && patch.field !== c.field) {
+        const varDef = TRIGGER_VARIABLES.find(v => v.field === patch.field);
+        updated.operator = varDef?.operators[0] || '>';
+        updated.value = '';
+      }
+      return updated;
+    }));
+  };
+
+  const addApprover = (val: string) => {
+    const trimmed = val.trim();
+    if (trimmed && !approvers.includes(trimmed)) {
+      setApprovers(prev => [...prev, trimmed]);
+    }
+    setApproverInput('');
+    setShowApproverSuggestions(false);
+  };
+
+  const removeApprover = (idx: number) => setApprovers(prev => prev.filter((_, i) => i !== idx));
+
+  const addSegment = (val: string) => {
+    const trimmed = val.trim();
+    if (trimmed && !segments.includes(trimmed)) {
+      setSegments(prev => [...prev, trimmed]);
+    }
+    setSegmentInput('');
+    setShowSegmentSuggestions(false);
+  };
+
+  const removeSegment = (idx: number) => setSegments(prev => prev.filter((_, i) => i !== idx));
+
+  const filteredApproverSuggestions = KNOWN_APPROVERS.filter(
+    a => !approvers.includes(a) && a.toLowerCase().includes(approverInput.toLowerCase())
+  );
+
+  const filteredSegmentSuggestions = KNOWN_SEGMENTS.filter(
+    s => !segments.includes(s) && s.toLowerCase().includes(segmentInput.toLowerCase())
+  );
+
+  const validConditions = conditions.filter(c => c.field && c.operator && c.value);
+  const canSave = validConditions.length > 0 && approvers.length > 0;
+
+  const getConditionText = () => {
+    return validConditions.map(c => formatCondition(c)).join(' AND ');
+  };
+
+  const inferCategory = () => {
+    const fields = validConditions.map(c => c.field);
+    if (fields.some(f => ['discount', 'acv', 'deal_size', 'price_override'].includes(f))) return 'pricing';
+    if (fields.some(f => ['payment_terms', 'billing_frequency', 'auto_renewal', 'contract_length', 'multi_year'].includes(f))) return 'terms';
+    return 'custom';
+  };
+
+  const handleSave = async () => {
+    if (!canSave) {
+      toast.error('Add at least one condition and one approver.');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await new Promise(r => setTimeout(r, 400));
+      const conditionText = getConditionText();
+      const finalName = triggerName.trim() || `${approvers[0]} \u2014 ${conditionText}`;
+      const finalCategory = category === 'custom' ? inferCategory() : category;
+
+      saveTrigger({
+        name: finalName,
+        when: conditionText,
+        then: approvers,
+        scope: segments.length > 0 ? segments : ['All segments'],
+        status: 'active',
+        category: finalCategory,
+        impact: { deals: 0, avgTime: '\u2014' },
+      });
+
+      toast.success(`Trigger "${finalName}" created`, {
+        description: "It's now live in Approval Triggers.",
+      });
+      onSave?.();
+      onClose();
+    } catch {
+      toast.error('Failed to create trigger.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-stretch justify-end z-50" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white w-[480px] min-w-[380px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="flex-shrink-0 border-b border-[#e2e0d8] px-5 py-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-[13px] font-semibold text-[#1a1a1a] tracking-tight">Create Approval Trigger</h2>
+            <button onClick={onClose} className="flex-shrink-0 p-1.5 hover:bg-[#f9fafb] rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20" aria-label="Close">
+              <X className="w-3.5 h-3.5 text-[#999891]" />
+            </button>
+          </div>
+          <p className="text-[11px] text-[#999891] mt-0.5">Define conditions, approvers, and scope for this trigger.</p>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 space-y-5">
+
+            {/* Trigger Name */}
+            <div>
+              <label className="block text-[11px] font-medium text-[#1a1a1a] mb-1">
+                Trigger Name <span className="text-[#999891] font-normal">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={triggerName}
+                onChange={(e) => setTriggerName(e.target.value)}
+                placeholder="Auto-generated from conditions if blank"
+                className="w-full h-8 px-2.5 border border-[#e2e0d8] rounded-md bg-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] transition-colors placeholder:text-[#999891]"
+              />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-[11px] font-medium text-[#1a1a1a] mb-1.5">Category</label>
+              <div className="flex gap-1.5">
+                {CATEGORY_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setCategory(opt.value)}
+                    className={`h-7 px-2.5 rounded-md text-[11px] font-medium transition-all ${
+                      category === opt.value
+                        ? 'bg-[#1a1a1a] text-white shadow-sm'
+                        : 'bg-[#f5f6f8] text-[#666666] border border-[#e2e0d8] hover:border-[#1a1a1a]/30'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <hr className="border-[#e2e0d8]" />
+
+            {/* ── CONDITIONS ─────────────────────────────── */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#666666] uppercase tracking-wider mb-3">
+                Conditions (When)
+              </label>
+              <div className="space-y-2.5">
+                {conditions.map((cond, idx) => (
+                  <ConditionRow
+                    key={cond.id}
+                    condition={cond}
+                    index={idx}
+                    total={conditions.length}
+                    onChange={(patch) => updateCondition(cond.id, patch)}
+                    onRemove={() => removeCondition(cond.id)}
+                  />
+                ))}
+              </div>
+              <button
+                onClick={addCondition}
+                className="mt-2 text-[11px] text-[#1a1a1a] hover:text-[#333333] font-medium transition-colors inline-flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" />
+                Add condition
+              </button>
+              {validConditions.length > 1 && (
+                <p className="text-[10px] text-[#999891] mt-1.5">All conditions must be true (AND logic).</p>
+              )}
+            </div>
+
+            <hr className="border-[#e2e0d8]" />
+
+            {/* ── APPROVERS ──────────────────────────────── */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#666666] uppercase tracking-wider mb-3">
+                Approval Chain (Then)
+              </label>
+              {approvers.length > 0 && (
+                <div className="space-y-1.5 mb-2.5">
+                  {approvers.map((a, idx) => (
+                    <div key={idx} className="flex items-center gap-2 group">
+                      <span className="w-5 h-5 rounded-full bg-[#f5f6f8] border border-[#e2e0d8] flex items-center justify-center text-[10px] font-medium text-[#666666] flex-shrink-0">
+                        {idx + 1}
+                      </span>
+                      <span className="flex-1 h-7 px-2.5 border border-[#e2e0d8] rounded-md bg-[#f9fafb] text-[12px] text-[#1a1a1a] flex items-center">
+                        {a}
+                      </span>
+                      <button
+                        onClick={() => removeApprover(idx)}
+                        className="p-1 text-[#999891] hover:text-red-600 hover:bg-red-50 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={approverInput}
+                  onChange={(e) => { setApproverInput(e.target.value); setShowApproverSuggestions(true); }}
+                  onFocus={() => setShowApproverSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowApproverSuggestions(false), 150)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && approverInput.trim()) {
+                      e.preventDefault();
+                      addApprover(approverInput);
+                    }
+                  }}
+                  placeholder={approvers.length === 0 ? 'Select or type an approver...' : 'Add next approver in chain...'}
+                  className="w-full h-8 px-2.5 border border-[#e2e0d8] rounded-md bg-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] transition-colors placeholder:text-[#999891]"
+                />
+                {showApproverSuggestions && filteredApproverSuggestions.length > 0 && (
+                  <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[#e2e0d8] rounded-md shadow-lg max-h-40 overflow-y-auto">
+                    {filteredApproverSuggestions.map(a => (
+                      <button
+                        key={a}
+                        onMouseDown={(e) => { e.preventDefault(); addApprover(a); }}
+                        className="w-full text-left px-2.5 py-1.5 text-[12px] text-[#1a1a1a] hover:bg-[#f9fafb] transition-colors"
+                      >
+                        {a}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {approvers.length > 1 && (
+                <p className="text-[10px] text-[#999891] mt-1.5">
+                  Sequential approval: {approvers.join(' \u2192 ')}
+                </p>
+              )}
+            </div>
+
+            <hr className="border-[#e2e0d8]" />
+
+            {/* ── SCOPE / SEGMENTS ────────────────────────── */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#666666] uppercase tracking-wider mb-3">
+                Scope (Segments)
+              </label>
+              {segments.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2.5">
+                  {segments.map((s, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#f5f6f8] border border-[#e2e0d8] rounded-md text-[11px] text-[#1a1a1a] font-medium"
+                    >
+                      {s}
+                      <button onClick={() => removeSegment(idx)} className="hover:text-red-600 transition-colors">
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={segmentInput}
+                  onChange={(e) => { setSegmentInput(e.target.value); setShowSegmentSuggestions(true); }}
+                  onFocus={() => setShowSegmentSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSegmentSuggestions(false), 150)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && segmentInput.trim()) {
+                      e.preventDefault();
+                      addSegment(segmentInput);
+                    }
+                  }}
+                  placeholder={segments.length === 0 ? 'All segments (leave empty for all)' : 'Add another segment...'}
+                  className="w-full h-8 px-2.5 border border-[#e2e0d8] rounded-md bg-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] transition-colors placeholder:text-[#999891]"
+                />
+                {showSegmentSuggestions && filteredSegmentSuggestions.length > 0 && (
+                  <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[#e2e0d8] rounded-md shadow-lg max-h-40 overflow-y-auto">
+                    {filteredSegmentSuggestions.map(s => (
+                      <button
+                        key={s}
+                        onMouseDown={(e) => { e.preventDefault(); addSegment(s); }}
+                        className="w-full text-left px-2.5 py-1.5 text-[12px] text-[#1a1a1a] hover:bg-[#f9fafb] transition-colors"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── LIVE PREVIEW ────────────────────────────── */}
+            {validConditions.length > 0 && approvers.length > 0 && (
+              <>
+                <hr className="border-[#e2e0d8]" />
+                <div className="px-3 py-2.5 bg-[#f9fafb] border border-[#f0f1f4] rounded-md">
+                  <div className="text-[10px] font-semibold text-[#999891] uppercase tracking-wider mb-1.5">Preview</div>
+                  <p className="text-[12px] text-[#1a1a1a] leading-relaxed">
+                    When <span className="font-semibold">{getConditionText()}</span>, require approval from{' '}
+                    <span className="font-semibold">{approvers.join(' \u2192 ')}</span>
+                    {segments.length > 0 && segments[0] !== 'All segments' && (
+                      <span className="text-[#999891]"> for {segments.join(', ')}</span>
+                    )}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex-shrink-0 border-t border-[#e2e0d8] px-5 py-2.5 flex items-center justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="h-7 px-2.5 border border-[#e2e0d8] rounded-md hover:bg-[#f9fafb] text-[#333333] text-[11px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!canSave || isSaving}
+            className="h-7 px-3 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1 text-[11px] font-medium transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 active:scale-[0.98]"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Saving&hellip;
+              </>
+            ) : (
+              <>
+                <Check className="w-3 h-3" />
+                Save Trigger
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CONDITION ROW ──────────────────────────────────────
+function ConditionRow({
+  condition,
+  index,
+  total,
+  onChange,
+  onRemove,
+}: {
+  condition: Condition;
+  index: number;
+  total: number;
+  onChange: (patch: Partial<Condition>) => void;
+  onRemove: () => void;
+}) {
+  const varDef = TRIGGER_VARIABLES.find(v => v.field === condition.field);
+
+  return (
+    <div className="space-y-1.5">
+      {index > 0 && (
+        <div className="flex items-center gap-2 py-0.5">
+          <div className="h-px flex-1 bg-[#e2e0d8]" />
+          <span className="text-[10px] font-semibold text-[#999891] uppercase">AND</span>
+          <div className="h-px flex-1 bg-[#e2e0d8]" />
+        </div>
+      )}
+      <div className="flex items-start gap-1.5">
+        <div className="flex-1 space-y-1.5">
+          {/* Variable select */}
+          <select
+            value={condition.field}
+            onChange={(e) => onChange({ field: e.target.value })}
+            className={`w-full h-8 pl-2.5 pr-7 border border-[#e2e0d8] rounded-md text-[12px] focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] transition-colors appearance-none cursor-pointer ${
+              condition.field ? 'bg-white text-[#1a1a1a]' : 'bg-[#f5f6f8] text-[#999891]'
+            }`}
+          >
+            <option value="">Select a variable...</option>
+            {TRIGGER_VARIABLES.map(v => (
+              <option key={v.field} value={v.field}>{v.label}</option>
+            ))}
+          </select>
+
+          {/* Operator + Value */}
+          {condition.field && varDef && (
+            <div className="flex gap-1.5">
+              <select
+                value={condition.operator}
+                onChange={(e) => onChange({ operator: e.target.value })}
+                className="h-8 pl-2.5 pr-7 border border-[#e2e0d8] rounded-md bg-white text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] transition-colors appearance-none cursor-pointer w-20"
+              >
+                {varDef.operators.map(op => (
+                  <option key={op} value={op}>{op}</option>
+                ))}
+              </select>
+
+              {varDef.type === 'select' || varDef.type === 'boolean' ? (
+                <select
+                  value={condition.value}
+                  onChange={(e) => onChange({ value: e.target.value })}
+                  className={`flex-1 h-8 pl-2.5 pr-7 border border-[#e2e0d8] rounded-md text-[12px] focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] transition-colors appearance-none cursor-pointer ${
+                    condition.value ? 'bg-white text-[#1a1a1a]' : 'bg-[#f5f6f8] text-[#999891]'
+                  }`}
+                >
+                  <option value="">Select value...</option>
+                  {varDef.options?.map(o => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              ) : (
+                <div className="flex-1 relative">
+                  {varDef.type === 'currency' && (
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[12px] text-[#999891]">$</span>
+                  )}
+                  <input
+                    type="number"
+                    value={condition.value}
+                    onChange={(e) => onChange({ value: e.target.value })}
+                    placeholder={varDef.placeholder || '0'}
+                    className={`w-full h-8 border border-[#e2e0d8] rounded-md bg-white text-[12px] tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] transition-colors ${
+                      varDef.type === 'currency' ? 'pl-6 pr-2.5' : 'px-2.5'
+                    }`}
+                  />
+                  {varDef.type === 'percent' && (
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[12px] text-[#999891]">%</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {total > 1 && (
+          <button
+            onClick={onRemove}
+            className="mt-1.5 p-1 text-[#999891] hover:text-red-600 hover:bg-red-50 rounded-md transition-colors flex-shrink-0"
+          >
+            <Trash2 className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // ─── TEMPLATE REVIEW / EDIT MODE ───────────────────────
@@ -62,6 +586,7 @@ function TemplateReviewMode({
   const [segmentInput, setSegmentInput] = useState('');
   const [showApproverSuggestions, setShowApproverSuggestions] = useState(false);
   const [showSegmentSuggestions, setShowSegmentSuggestions] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const removeApprover = (idx: number) => setApprovers(prev => prev.filter((_, i) => i !== idx));
   const removeSegment = (idx: number) => setSegments(prev => prev.filter((_, i) => i !== idx));
@@ -92,616 +617,262 @@ function TemplateReviewMode({
     s => !segments.includes(s) && s.toLowerCase().includes(segmentInput.toLowerCase())
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim() || !condition.trim() || approvers.length === 0) {
       toast.error('Please fill in the rule name, condition, and at least one approver.');
       return;
     }
 
-    saveTrigger({
-      name: name.trim(),
-      when: condition.trim(),
-      then: approvers,
-      scope: segments.length > 0 ? segments : ['All segments'],
-      status: 'active',
-      category,
-      impact: { deals: 0, avgTime: '—' },
-      fromTemplate: prefill.templateName,
-    });
+    setIsSaving(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      saveTrigger({
+        name: name.trim(),
+        when: condition.trim(),
+        then: approvers,
+        scope: segments.length > 0 ? segments : ['All segments'],
+        status: 'active',
+        category,
+        impact: { deals: 0, avgTime: '\u2014' },
+        fromTemplate: prefill.templateName,
+      });
 
-    toast.success(`Trigger "${name.trim()}" created`, {
-      description: "It's now live in Approval Triggers.",
-    });
-    onSave?.();
-    onClose();
+      toast.success(`Trigger "${name.trim()}" created`, {
+        description: "It's now live in Approval Triggers.",
+      });
+      onSave?.();
+      onClose();
+    } catch {
+      toast.error('Failed to create trigger.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-0 sm:p-4">
-      <div className="bg-white w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-stretch justify-end z-50" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white w-[480px] min-w-[380px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+
         {/* Header */}
-        <div className="flex-shrink-0 border-b border-[#e1e4e8] px-6 py-4 flex items-center justify-between">
-          <div className="min-w-0">
-            <h2 className="text-lg font-semibold text-[#1a1a1a]">Create Approval Trigger</h2>
-            <p className="text-sm text-[#6c757d] mt-0.5">Review and customize this template, then save.</p>
+        <div className="flex-shrink-0 border-b border-[#e2e0d8] px-5 py-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-[13px] font-semibold text-[#1a1a1a] tracking-tight">Create from Template</h2>
+            <button onClick={onClose} className="flex-shrink-0 p-1.5 hover:bg-[#f9fafb] rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20" aria-label="Close">
+              <X className="w-3.5 h-3.5 text-[#999891]" />
+            </button>
           </div>
-          <button onClick={onClose} className="flex-shrink-0 p-2 hover:bg-[#f8f9fa] rounded-lg transition-colors">
-            <X className="w-5 h-5 text-[#6c757d]" />
-          </button>
+          <p className="text-[11px] text-[#999891] mt-0.5">Review and customize this template, then save.</p>
         </div>
 
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          {/* Template source */}
-          <div className="p-4 bg-[#f8f9fa] border border-[#e1e4e8] rounded-lg">
-            <div className="flex items-center gap-2 mb-1.5">
-              <Layers className="w-4 h-4 text-[#1a1a1a] flex-shrink-0" />
-              <span className="text-[10px] font-semibold text-[#999891] uppercase tracking-wider">From Template</span>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 space-y-4">
+
+            {/* Template source */}
+            <div className="px-3 py-2.5 bg-[#f9fafb] border border-[#f0f1f4] rounded-md">
+              <div className="flex items-center gap-2 mb-1">
+                <Layers className="w-3.5 h-3.5 text-[#1a1a1a] flex-shrink-0" />
+                <span className="text-[10px] font-semibold text-[#999891] uppercase tracking-wider">From Template</span>
+              </div>
+              <div className="text-[12px] font-medium text-[#1a1a1a] leading-snug">{prefill.templateName}</div>
+              <div className="text-[11px] text-[#999891] mt-0.5 leading-relaxed">{prefill.templateDescription}</div>
             </div>
-            <div className="text-sm font-medium text-[#1a1a1a] mb-1 leading-snug">{prefill.templateName}</div>
-            <div className="text-xs text-[#6c757d] leading-relaxed">{prefill.templateDescription}</div>
-          </div>
 
-          {/* Rule Name */}
-          <div>
-            <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5">Rule Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
-            />
-            <p className="text-[11px] text-[#999891] mt-1">This is the display name shown in the triggers list.</p>
-          </div>
-
-          {/* Condition / When */}
-          <div>
-            <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5">When (Condition)</label>
-            <input
-              type="text"
-              value={condition}
-              onChange={(e) => setCondition(e.target.value)}
-              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm font-mono"
-            />
-            <p className="text-[11px] text-[#999891] mt-1">The condition that fires this trigger, e.g. "Discount &gt; 20%"</p>
-          </div>
-
-          {/* Approvers */}
-          <div>
-            <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5">Then Require Approval From</label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {approvers.map((a, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#fff3e0] text-[#e65100] rounded-md text-xs font-medium"
-                >
-                  {a}
-                  <button
-                    onClick={() => removeApprover(i)}
-                    className="hover:bg-[#e65100]/10 rounded-full p-0.5 transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="relative">
+            {/* Rule Name */}
+            <div>
+              <label className="block text-[11px] font-medium text-[#1a1a1a] mb-1">Rule Name</label>
               <input
                 type="text"
-                value={approverInput}
-                onChange={(e) => { setApproverInput(e.target.value); setShowApproverSuggestions(true); }}
-                onFocus={() => setShowApproverSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowApproverSuggestions(false), 150)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && approverInput.trim()) {
-                    e.preventDefault();
-                    addApprover(approverInput);
-                  }
-                }}
-                placeholder="Type to add approver…"
-                className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full h-8 px-2.5 border border-[#e2e0d8] rounded-md bg-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] transition-colors"
               />
-              {showApproverSuggestions && filteredApproverSuggestions.length > 0 && (
-                <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[#e1e4e8] rounded-md shadow-lg max-h-40 overflow-y-auto">
-                  {filteredApproverSuggestions.map(a => (
-                    <button
-                      key={a}
-                      onMouseDown={(e) => { e.preventDefault(); addApprover(a); }}
-                      className="w-full text-left px-3 py-2 text-sm text-[#1a1a1a] hover:bg-[#f5f4f0] transition-colors"
-                    >
-                      {a}
-                    </button>
+            </div>
+
+            <hr className="border-[#e2e0d8]" />
+
+            {/* Condition */}
+            <div>
+              <label className="block text-[11px] font-medium text-[#1a1a1a] mb-1">Condition (When)</label>
+              <input
+                type="text"
+                value={condition}
+                onChange={(e) => setCondition(e.target.value)}
+                className="w-full h-8 px-2.5 border border-[#e2e0d8] rounded-md bg-white text-[12px] font-mono focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] transition-colors"
+              />
+            </div>
+
+            <hr className="border-[#e2e0d8]" />
+
+            {/* Approvers */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#666666] uppercase tracking-wider mb-2.5">Approval Chain</label>
+              {approvers.length > 0 && (
+                <div className="space-y-1.5 mb-2.5">
+                  {approvers.map((a, idx) => (
+                    <div key={idx} className="flex items-center gap-2 group">
+                      <span className="w-5 h-5 rounded-full bg-[#f5f6f8] border border-[#e2e0d8] flex items-center justify-center text-[10px] font-medium text-[#666666] flex-shrink-0">
+                        {idx + 1}
+                      </span>
+                      <span className="flex-1 h-7 px-2.5 border border-[#e2e0d8] rounded-md bg-[#f9fafb] text-[12px] text-[#1a1a1a] flex items-center">
+                        {a}
+                      </span>
+                      <button
+                        onClick={() => removeApprover(idx)}
+                        className="p-1 text-[#999891] hover:text-red-600 hover:bg-red-50 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={approverInput}
+                  onChange={(e) => { setApproverInput(e.target.value); setShowApproverSuggestions(true); }}
+                  onFocus={() => setShowApproverSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowApproverSuggestions(false), 150)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && approverInput.trim()) {
+                      e.preventDefault();
+                      addApprover(approverInput);
+                    }
+                  }}
+                  placeholder="Add approver..."
+                  className="w-full h-8 px-2.5 border border-[#e2e0d8] rounded-md bg-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] transition-colors placeholder:text-[#999891]"
+                />
+                {showApproverSuggestions && filteredApproverSuggestions.length > 0 && (
+                  <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[#e2e0d8] rounded-md shadow-lg max-h-40 overflow-y-auto">
+                    {filteredApproverSuggestions.map(a => (
+                      <button
+                        key={a}
+                        onMouseDown={(e) => { e.preventDefault(); addApprover(a); }}
+                        className="w-full text-left px-2.5 py-1.5 text-[12px] text-[#1a1a1a] hover:bg-[#f9fafb] transition-colors"
+                      >
+                        {a}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            {approvers.length > 1 && (
-              <p className="text-[11px] text-[#999891] mt-1">Approvals are sequential: {approvers.join(' → ')}</p>
-            )}
-          </div>
 
-          {/* Segments */}
-          <div>
-            <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5">Applies to Segments</label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {segments.map((s, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#f0f0f0] text-[#6c757d] rounded-md text-xs font-medium"
-                >
-                  {s}
-                  <button
-                    onClick={() => removeSegment(i)}
-                    className="hover:bg-[#6c757d]/10 rounded-full p-0.5 transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="relative">
-              <input
-                type="text"
-                value={segmentInput}
-                onChange={(e) => { setSegmentInput(e.target.value); setShowSegmentSuggestions(true); }}
-                onFocus={() => setShowSegmentSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSegmentSuggestions(false), 150)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && segmentInput.trim()) {
-                    e.preventDefault();
-                    addSegment(segmentInput);
-                  }
-                }}
-                placeholder="Type to add segment…"
-                className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
-              />
-              {showSegmentSuggestions && filteredSegmentSuggestions.length > 0 && (
-                <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[#e1e4e8] rounded-md shadow-lg max-h-40 overflow-y-auto">
-                  {filteredSegmentSuggestions.map(s => (
-                    <button
-                      key={s}
-                      onMouseDown={(e) => { e.preventDefault(); addSegment(s); }}
-                      className="w-full text-left px-3 py-2 text-sm text-[#1a1a1a] hover:bg-[#f5f4f0] transition-colors"
+            <hr className="border-[#e2e0d8]" />
+
+            {/* Segments */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#666666] uppercase tracking-wider mb-2.5">Scope</label>
+              {segments.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2.5">
+                  {segments.map((s, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#f5f6f8] border border-[#e2e0d8] rounded-md text-[11px] text-[#1a1a1a] font-medium"
                     >
                       {s}
-                    </button>
+                      <button onClick={() => removeSegment(idx)} className="hover:text-red-600 transition-colors">
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </span>
                   ))}
                 </div>
               )}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={segmentInput}
+                  onChange={(e) => { setSegmentInput(e.target.value); setShowSegmentSuggestions(true); }}
+                  onFocus={() => setShowSegmentSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSegmentSuggestions(false), 150)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && segmentInput.trim()) {
+                      e.preventDefault();
+                      addSegment(segmentInput);
+                    }
+                  }}
+                  placeholder="Add segment..."
+                  className="w-full h-8 px-2.5 border border-[#e2e0d8] rounded-md bg-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] transition-colors placeholder:text-[#999891]"
+                />
+                {showSegmentSuggestions && filteredSegmentSuggestions.length > 0 && (
+                  <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[#e2e0d8] rounded-md shadow-lg max-h-40 overflow-y-auto">
+                    {filteredSegmentSuggestions.map(s => (
+                      <button
+                        key={s}
+                        onMouseDown={(e) => { e.preventDefault(); addSegment(s); }}
+                        className="w-full text-left px-2.5 py-1.5 text-[12px] text-[#1a1a1a] hover:bg-[#f9fafb] transition-colors"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5">Category</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
-            >
-              {CATEGORY_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
+            <hr className="border-[#e2e0d8]" />
 
-          {/* Live Preview */}
-          <div className="p-4 bg-[#f5f4f0] border border-[#1a1a1a]/20 rounded-lg">
-            <div className="text-[10px] font-semibold text-[#1a1a1a] uppercase tracking-wider mb-2">Live Preview</div>
-            <p className="text-sm text-[#1a1a1a] leading-relaxed">
-              When <span className="font-semibold">{condition || '…'}</span>, require approval from{' '}
-              <span className="font-semibold">{approvers.length > 0 ? approvers.join(' → ') : '…'}</span>
-              {segments.length > 0 && segments[0] !== 'All segments' && (
-                <span className="text-[#6c757d]"> for {segments.join(', ')}</span>
-              )}
-            </p>
+            {/* Category */}
+            <div>
+              <label className="block text-[11px] font-medium text-[#1a1a1a] mb-1.5">Category</label>
+              <div className="flex gap-1.5">
+                {CATEGORY_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setCategory(opt.value)}
+                    className={`h-7 px-2.5 rounded-md text-[11px] font-medium transition-all ${
+                      category === opt.value
+                        ? 'bg-[#1a1a1a] text-white shadow-sm'
+                        : 'bg-[#f5f6f8] text-[#666666] border border-[#e2e0d8] hover:border-[#1a1a1a]/30'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Live Preview */}
+            <div className="px-3 py-2.5 bg-[#f9fafb] border border-[#f0f1f4] rounded-md">
+              <div className="text-[10px] font-semibold text-[#999891] uppercase tracking-wider mb-1.5">Preview</div>
+              <p className="text-[12px] text-[#1a1a1a] leading-relaxed">
+                When <span className="font-semibold">{condition || '\u2026'}</span>, require approval from{' '}
+                <span className="font-semibold">{approvers.length > 0 ? approvers.join(' \u2192 ') : '\u2026'}</span>
+                {segments.length > 0 && segments[0] !== 'All segments' && (
+                  <span className="text-[#999891]"> for {segments.join(', ')}</span>
+                )}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 border-t border-[#e1e4e8] px-6 py-4 flex items-center justify-end gap-3">
+        <div className="flex-shrink-0 border-t border-[#e2e0d8] px-5 py-2.5 flex items-center justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-[#e1e4e8] rounded-md hover:bg-[#f8f9fa] text-[#1a1a1a] text-sm font-medium transition-colors"
+            className="h-7 px-2.5 border border-[#e2e0d8] rounded-md hover:bg-[#f9fafb] text-[#333333] text-[11px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-5 py-2 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] flex items-center gap-2 text-sm font-medium transition-colors shadow-sm"
+            disabled={isSaving}
+            className="h-7 px-3 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1 text-[11px] font-medium transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 active:scale-[0.98]"
           >
-            <Check className="w-4 h-4" />
-            Save Trigger
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── WIZARD MODE (existing step-by-step flow) ──────────
-function WizardMode({
-  onClose,
-  onSave,
-}: {
-  onClose: () => void;
-  onSave?: () => void;
-}) {
-  const [step, setStep] = useState(1);
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-
-  // Tracked form state for saving
-  const [discountOperator, setDiscountOperator] = useState('Greater than');
-  const [discountValue, setDiscountValue] = useState('20');
-  const [discountUnit, setDiscountUnit] = useState('%');
-  const [paymentTerm, setPaymentTerm] = useState('Net 90');
-  const [segment, setSegment] = useState('All segments');
-  const [approverGroup, setApproverGroup] = useState('Deal Desk');
-  const [requiredApprovals, setRequiredApprovals] = useState('1');
-  const [triggerName, setTriggerName] = useState('');
-
-  const triggerTypes = [
-    {
-      id: 'discount',
-      icon: DollarSign,
-      title: 'Discount exceeds threshold',
-      description: 'Require approval when discount percentage or amount is too high',
-      examples: ['Discount > 20%', 'Discount > $10,000', 'Discount on enterprise deals']
-    },
-    {
-      id: 'payment-terms',
-      icon: FileText,
-      title: 'Contract term selected',
-      description: 'Require approval for specific payment terms or billing frequencies',
-      examples: ['Net 90 payment terms', 'Upfront billing', 'Multi-year contracts']
-    },
-    {
-      id: 'renewal',
-      icon: RefreshCw,
-      title: 'Renewal / auto-renewal change',
-      description: 'Require approval when renewal settings are modified',
-      examples: ['Auto-renewal disabled', 'Early renewal', 'Renewal discount applied']
-    },
-    {
-      id: 'pricing-override',
-      icon: Receipt,
-      title: 'Pricing model override',
-      description: 'Require approval for custom pricing or non-standard models',
-      examples: ['Custom pricing', 'Volume pricing', 'Special contract rates']
-    },
-    {
-      id: 'custom',
-      icon: Settings,
-      title: 'Custom condition',
-      description: 'Create your own approval condition from scratch',
-      examples: ['Deal size threshold', 'Region-specific rules', 'Product combinations']
-    },
-  ];
-
-  const handleNext = () => {
-    if (step < 4) setStep(step + 1);
-  };
-
-  const handleBack = () => {
-    if (step > 1) setStep(step - 1);
-  };
-
-  // Build condition text from form values
-  const getConditionText = () => {
-    if (selectedType === 'discount') return `Discount ${discountOperator === 'Greater than' ? '>' : discountOperator === 'Greater than or equal to' ? '≥' : '='} ${discountValue}${discountUnit}`;
-    if (selectedType === 'payment-terms') return `Payment Terms = ${paymentTerm}`;
-    if (selectedType === 'renewal') return 'Auto-renewal = Off';
-    if (selectedType === 'pricing-override') return 'Custom pricing override';
-    return 'Custom condition';
-  };
-
-  const getCategoryForType = () => {
-    if (selectedType === 'discount' || selectedType === 'pricing-override') return 'pricing';
-    if (selectedType === 'payment-terms' || selectedType === 'renewal') return 'terms';
-    return 'custom';
-  };
-
-  const handleSaveTrigger = () => {
-    const conditionText = getConditionText();
-    const finalName = triggerName.trim() || `${approverGroup} — ${conditionText}`;
-
-    saveTrigger({
-      name: finalName,
-      when: conditionText,
-      then: [approverGroup],
-      scope: [segment],
-      status: 'active',
-      category: getCategoryForType(),
-      impact: { deals: 0, avgTime: '—' },
-    });
-
-    toast.success(`Trigger "${finalName}" created`, {
-      description: "It's now live in Approval Triggers.",
-    });
-    onSave?.();
-    onClose();
-  };
-
-  const renderStepIndicator = () => (
-    <div className="flex items-center justify-center gap-2 mb-8">
-      {[1, 2, 3, 4].map((s) => (
-        <div key={s} className="flex items-center gap-2">
-          <div className={`
-            w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all
-            ${s < step ? 'bg-[#1a1a1a] text-white' : ''}
-            ${s === step ? 'bg-[#1a1a1a] text-white ring-4 ring-[#1a1a1a]/20' : ''}
-            ${s > step ? 'bg-[#e1e4e8] text-[#6c757d]' : ''}
-          `}>
-            {s < step ? <Check className="w-4 h-4" /> : s}
-          </div>
-          {s < 4 && (
-            <div className={`w-12 h-0.5 ${s < step ? 'bg-[#1a1a1a]' : 'bg-[#e1e4e8]'}`} />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-0 sm:p-4">
-      <div className="bg-white w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-3xl sm:rounded-xl shadow-2xl overflow-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-[#e1e4e8] px-6 py-4 flex items-center justify-between z-10">
-          <div>
-            <h2 className="text-xl font-semibold text-[#1a1a1a]">Create Approval Trigger</h2>
-            <p className="text-sm text-[#6c757d] mt-0.5">
-              {step === 1 && "What scenario should trigger an approval?"}
-              {step === 2 && "When should this trigger fire?"}
-              {step === 3 && "Who needs to approve?"}
-              {step === 4 && "Review and confirm"}
-            </p>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-[#f8f9fa] rounded-lg transition-colors">
-            <X className="w-5 h-5 text-[#6c757d]" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-6">
-          {renderStepIndicator()}
-
-          {/* Step 1 */}
-          {step === 1 && (
-            <div>
-              <h3 className="text-lg font-semibold text-[#1a1a1a] mb-2">What happened?</h3>
-              <p className="text-sm text-[#6c757d] mb-6">Choose the type of event that should trigger an approval</p>
-              <div className="space-y-3">
-                {triggerTypes.map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => setSelectedType(type.id)}
-                    className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                      selectedType === type.id ? 'border-[#1a1a1a] bg-[#f5f4f0]' : 'border-[#e1e4e8] hover:border-[#1a1a1a]/30 bg-white'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      {type.icon && <type.icon className="w-6 h-6 text-[#1a1a1a] mt-0.5" />}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-[#1a1a1a]">{type.title}</h4>
-                          {selectedType === type.id && <Check className="w-4 h-4 text-[#1a1a1a]" />}
-                        </div>
-                        <p className="text-sm text-[#6c757d] mb-2">{type.description}</p>
-                        {selectedType === type.id && (
-                          <div className="mt-3 pt-3 border-t border-[#e1e4e8]">
-                            <div className="text-xs text-[#6c757d] mb-2 flex items-center gap-1">
-                              <Info className="w-3 h-3" /> Common use cases:
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {type.examples.map((ex, idx) => (
-                                <span key={idx} className="px-2 py-1 bg-white border border-[#e1e4e8] rounded text-xs text-[#1a1a1a]">{ex}</span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 2 */}
-          {step === 2 && selectedType && (
-            <div>
-              <h3 className="text-lg font-semibold text-[#1a1a1a] mb-2">When should this trigger?</h3>
-              <p className="text-sm text-[#6c757d] mb-6">Define the specific condition that activates this approval</p>
-
-              {selectedType === 'discount' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Discount threshold</label>
-                    <div className="flex gap-3">
-                      <select value={discountOperator} onChange={e => setDiscountOperator(e.target.value)} className="flex-1 px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm">
-                        <option>Greater than</option>
-                        <option>Greater than or equal to</option>
-                        <option>Equal to</option>
-                      </select>
-                      <input type="number" value={discountValue} onChange={e => setDiscountValue(e.target.value)} placeholder="20" className="w-24 px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm" />
-                      <select value={discountUnit} onChange={e => setDiscountUnit(e.target.value)} className="w-20 px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm">
-                        <option>%</option>
-                        <option>$</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Apply to segments (optional)</label>
-                    <select value={segment} onChange={e => setSegment(e.target.value)} className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm">
-                      <option>All segments</option>
-                      <option>Enterprise only</option>
-                      <option>Mid-Market only</option>
-                      <option>SMB only</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {selectedType === 'payment-terms' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Payment term</label>
-                    <select value={paymentTerm} onChange={e => setPaymentTerm(e.target.value)} className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm">
-                      <option>Net 30</option>
-                      <option>Net 45</option>
-                      <option>Net 60</option>
-                      <option>Net 90</option>
-                      <option>Upfront</option>
-                      <option>Custom terms</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Apply to segments (optional)</label>
-                    <select value={segment} onChange={e => setSegment(e.target.value)} className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm">
-                      <option>All segments</option>
-                      <option>Enterprise only</option>
-                      <option>Mid-Market only</option>
-                      <option>SMB only</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Preview */}
-              <div className="mt-6 p-4 bg-[#f5f4f0] border border-[#1a1a1a]/20 rounded-lg">
-                <div className="text-xs text-[#1a1a1a] font-medium mb-2">PREVIEW</div>
-                <div className="text-sm text-[#1a1a1a]">
-                  Triggers when {getConditionText()} for {segment}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3 */}
-          {step === 3 && (
-            <div>
-              <h3 className="text-lg font-semibold text-[#1a1a1a] mb-2">Who needs to approve?</h3>
-              <p className="text-sm text-[#6c757d] mb-6">Select approval groups and set escalation rules</p>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Primary approver group</label>
-                  <select value={approverGroup} onChange={e => setApproverGroup(e.target.value)} className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm">
-                    <option>Deal Desk</option>
-                    <option>Finance</option>
-                    <option>VP of Sales</option>
-                    <option>Head of Mid-Market</option>
-                    <option>Legal</option>
-                    <option>Customer Success</option>
-                    <option>Product Team</option>
-                    <option>Engineering</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Required approvals</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={requiredApprovals}
-                    onChange={e => setRequiredApprovals(e.target.value)}
-                    className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
-                  />
-                  <p className="text-xs text-[#6c757d] mt-1">Number of approvals needed from this group</p>
-                </div>
-                <div className="pt-4 border-t border-[#e1e4e8]">
-                  <button className="text-sm text-[#1a1a1a] hover:underline font-medium">+ Add escalation approver</button>
-                  <p className="text-xs text-[#6c757d] mt-1">Optional: require additional approval if conditions are met</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 4 */}
-          {step === 4 && (
-            <div>
-              <h3 className="text-lg font-semibold text-[#1a1a1a] mb-2">Review and confirm</h3>
-              <p className="text-sm text-[#6c757d] mb-6">Make sure everything looks correct before saving</p>
-              <div className="space-y-4">
-                <div className="p-4 bg-[#f8f9fa] border border-[#e1e4e8] rounded-lg">
-                  <h4 className="text-sm font-semibold text-[#1a1a1a] mb-3">Plain English Summary</h4>
-                  <p className="text-sm text-[#1a1a1a] leading-relaxed">
-                    If a rep sets <span className="font-semibold">{getConditionText()}</span> on a deal for{' '}
-                    <span className="font-semibold">{segment}</span>, approval is required from{' '}
-                    <span className="font-semibold">{approverGroup}</span> ({requiredApprovals} approval needed).
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 p-3 bg-white border border-[#e1e4e8] rounded-lg">
-                    <DollarSign className="w-5 h-5 text-[#1a1a1a] mt-0.5 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <div className="text-xs text-[#6c757d]">TRIGGER TYPE</div>
-                      <div className="text-sm font-medium text-[#1a1a1a]">{triggerTypes.find(t => t.id === selectedType)?.title}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 bg-white border border-[#e1e4e8] rounded-lg">
-                    <Settings className="w-5 h-5 text-[#1a1a1a] mt-0.5 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <div className="text-xs text-[#6c757d]">CONDITION</div>
-                      <div className="text-sm font-medium text-[#1a1a1a]">{getConditionText()} for {segment}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 bg-white border border-[#e1e4e8] rounded-lg">
-                    <Users className="w-5 h-5 text-[#1a1a1a] mt-0.5 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <div className="text-xs text-[#6c757d]">APPROVERS</div>
-                      <div className="text-sm font-medium text-[#1a1a1a]">{approverGroup} ({requiredApprovals} approval required)</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#1a1a1a] mb-2">Trigger name (optional)</label>
-                  <input
-                    type="text"
-                    value={triggerName}
-                    onChange={e => setTriggerName(e.target.value)}
-                    placeholder={`${approverGroup} — ${getConditionText()}`}
-                    className="w-full px-3 py-2 border border-[#e1e4e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20 focus:border-[#1a1a1a] text-sm"
-                  />
-                  <p className="text-xs text-[#6c757d] mt-1">Leave blank to auto-generate from conditions</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-[#e1e4e8] px-6 py-4 flex items-center justify-between z-10">
-          <button
-            onClick={handleBack}
-            disabled={step === 1}
-            className="h-9 px-4 text-[#6c757d] hover:text-[#1a1a1a] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors inline-flex items-center"
-          >
-            Back
-          </button>
-          <div className="flex items-center gap-3">
-            <button onClick={onClose} className="h-9 px-4 border border-[#e1e4e8] rounded-md hover:bg-[#f8f9fa] text-[#1a1a1a] text-sm font-medium transition-colors inline-flex items-center focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20">
-              Cancel
-            </button>
-            {step < 4 ? (
-              <button
-                onClick={handleNext}
-                disabled={step === 1 && !selectedType}
-                className="h-9 px-4 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 text-sm font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
-              >
-                Continue
-                <ChevronRight className="w-4 h-4" />
-              </button>
+            {isSaving ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Saving&hellip;
+              </>
             ) : (
-              <button
-                onClick={handleSaveTrigger}
-                className="h-9 px-4 bg-[#1a1a1a] text-white rounded-md hover:bg-[#333333] inline-flex items-center gap-2 text-sm font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1a1a1a]/20"
-              >
-                <Check className="w-4 h-4" />
+              <>
+                <Check className="w-3 h-3" />
                 Save Trigger
-              </button>
+              </>
             )}
-          </div>
+          </button>
         </div>
       </div>
     </div>
